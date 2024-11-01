@@ -23,32 +23,32 @@ class Executor:
         '''Executa a instrução de acordo com o formato'''
 
         # Dict dispatch pattern. Bem legal pra substituir if-elif-else, apesar de eu poder usar match case no Python 3.10:
-        funcs = defaultdict(lambda *args: lambda *a: ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}"), {
-            'R_FORMAT': self.execute_r,
-            'I_FORMAT': self.execute_i,
-            'S_FORMAT': self.execute_s,
-            'SB_FORMAT': self.execute_sb,
-            'U_FORMAT': self.execute_u,
-            'UJ_FORMAT': self.execute_uj
-        })
-        funcs[ic['ins_format']](ic)
+        # funcs = defaultdict(lambda *args: lambda *a: ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}"), {
+        #     'R_FORMAT': self.execute_r,
+        #     'I_FORMAT': self.execute_i,
+        #     'S_FORMAT': self.execute_s,
+        #     'SB_FORMAT': self.execute_sb,
+        #     'U_FORMAT': self.execute_u,
+        #     'UJ_FORMAT': self.execute_uj
+        # })
+        # funcs[ic['ins_format']](ic)
 
         # match case pattern:
-        # match ic['ins_format']:
-        #     case 'R_FORMAT':
-        #         self.execute_r(ic)
-        #     case 'I_FORMAT':
-        #         self.execute_i(ic)
-        #     case 'S_FORMAT':
-        #         self.execute_s(ic)
-        #     case 'SB_FORMAT':
-        #         self.execute_sb(ic)
-        #     case 'U_FORMAT':
-        #         self.execute_u(ic)
-        #     case 'UJ_FORMAT':
-        #         self.execute_uj(ic)
-        #     case _:
-        #         raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
+        match ic['ins_format']:
+            case 'R_FORMAT':
+                self.execute_r(ic)
+            case 'I_FORMAT':
+                self.execute_i(ic)
+            case 'S_FORMAT':
+                self.execute_s(ic)
+            case 'SB_FORMAT':
+                self.execute_sb(ic)
+            case 'U_FORMAT':
+                self.execute_u(ic)
+            case 'UJ_FORMAT':
+                self.execute_uj(ic)
+            case _:
+                raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
 
         # if ic['ins_format'] == 'R_FORMAT':
         #     self.execute_r(ic)
