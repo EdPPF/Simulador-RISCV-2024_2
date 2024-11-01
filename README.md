@@ -10,6 +10,27 @@ Este trabalho consiste na implementação de um simulador da arquitetura RV32I.
 
 Nem todas as instruções serão implementadas!
 
+# Como Rodar o Programa
+
+Clone o repositório e navegue até ele:
+
+```bash
+git clone https://github.com/EdPPF/Simulador-RISCV-2024_2.git
+cd Simulador-RISCV-2024_2
+```
+
+Instale as dependências necessárias:
+
+```bash
+pip install -r requirements.txt
+```
+
+Execute o simulador:
+
+```bash
+python src/main.py
+```
+
 ## Instruções Implementadas
 
 ```bash
@@ -35,12 +56,13 @@ rv32i-simulator/
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── cpu.py             # Implementação da CPU (registradores, ciclo de execução)
-│   │   ├── memory.py          # Implementação da memória (load/store)
+│   │   ├── decoder.py         # Função decode() para extrair os campos da instrução
+│   │   ├── executor.py        # Função execute() para executar instruções
 │   │   ├── instruction_set.py # Conjunto de instruções RV32I
-│   │   └── executor.py        # Função execute() para executar instruções
+│   │   └── memory.py          # Implementação da memória (load/store)
 │   ├── utils/                 # Utilitários e funções auxiliares
 │   │   ├── __init__.py
-│   │   └── binary_utils.py    # Funções para conversão e manipulação de binários
+│   │   └── binaries.py        # Funções para conversão e manipulação de binários
 │   └── main.py                # Ponto de entrada do simulador
 ├── tests/
 │   └── TODO
