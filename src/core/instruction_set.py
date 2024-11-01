@@ -16,7 +16,7 @@ Syscall:
 """
 
 """
-! Diferente do projeto do CPeluti, onde os parâmetros das instruções são `i32`, e o banco de regs é passado
+! Diferente de outro projeto, onde os parâmetros das instruções são `i32`, e o banco de regs é passado
 ! apenas na chamada da instrução, aqui estou acessando o banco diretamente nas funções de instrução.
 """
 
@@ -25,6 +25,11 @@ class InstructionSet:
     """Conjunto de instruções RV32I."""
     def __init__(self, regs) -> None:
         self.xregs = regs
+        """Banco de registradores. Definido em `cpu.py`:
+        ```python
+        xregs = np.zeros(33, dtype=np.uint32)
+        ```
+        """
 
     def _gera_imm(self, ri):
         '''Estende o sinal do imediato de 12 bits para 32 bits.'''
