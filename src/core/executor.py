@@ -1,41 +1,102 @@
-# Função execute() para executar instruções
+from collections import defaultdict
+from decoder import Decoder
+from memory import Memory
+from cpu import xregs
 
-"""
-def decode(instruction_context_st& ic):
-    '''Extrai todos os campos da instrução'''
-    int32_t tmp
-    opcode	= ri & 0x7F
-    rs2		= (ri >> 20) & 0x1F
-    rs1		= (ri >> 15) & 0x1F
-    rd		= (ri >> 7)  & 0x1F
-    shamt	= (ri >> 20) & 0x1F
-    funct3	= (ri >> 12) & 0x7
-    funct7  = (ri >> 25)
-    imm12_i = ((int32_t)ri) >> 20
-    tmp     = get_field(ri, 7, 0x1f)
-    imm12_s = set_field(imm12_i, 0, 0x1f, tmp)
-    imm13   = imm12_s
-    imm13 = set_bit(imm13, 11, imm12_s&1)
-    imm13 = imm13 & ~1
-    imm20_u = ri & (~0xFFF)
-    # mais aborrecido...
-    imm21 = (int32_t)ri >> 11			# estende sinal
-    tmp = get_field(ri, 12, 0xFF)		# le campo 19:12
-    imm21 = set_field(imm21, 12, 0xFF, tmp)	# escreve campo em imm21
-    tmp = get_bit(ri, 20)				# le o bit 11 em ri(20)
-    imm21 = set_bit(imm21, 11, tmp)			# posiciona bit 11
-    tmp = get_field(ri, 21, 0x3FF)
-    imm21 = set_field(imm21, 1, 0x3FF, tmp)
-    imm21 = imm21 & ~1					# zero bit 0
-    ic.ins_code = get_instr_code(opcode, funct3, funct7)
-    ic.ins_format = get_i_format(opcode, funct3, funct7)
-    ic.rs1 = (REGISTERS)rs1
-    ic.rs2 = (REGISTERS)rs2
-    ic.rd = (REGISTERS)rd
-    ic.shamt = shamt
-    ic.imm12_i = imm12_i
-    ic.imm12_s = imm12_s
-    ic.imm13 = imm13
-    ic.imm21 = imm21
-    ic.imm20_u = imm20_u
-"""
+# Função execute() para executar instruções
+# A função execute() executa a instrução que foi lida pela função fetch() e decodificada por decode()
+
+class Executor:
+    def __init__(self, registers, memory) -> None:
+        self.xregs = registers
+        self.memory = memory
+        self.pc = 0 #0x0?
+        self.decoder = Decoder()
+
+    def fetch(self) -> str:
+        '''Lê a instrução da memória e incrementa o PC.'''
+        instruction: str = self.memory.lw(self.pc, 0) # 0 porque a área de .text do RARS começa em 0 na memória
+        self.pc += 4
+        return instruction
+
+    def execute(self, ic):
+        '''Executa a instrução de acordo com o formato'''
+
+        # Dict dispatch pattern. Bem legal pra substituir if-elif-else, apesar de eu poder usar match case no Python 3.10:
+        funcs = defaultdict(lambda *args: lambda *a: ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}"), {
+            'R_FORMAT': self.execute_r,
+            'I_FORMAT': self.execute_i,
+            'S_FORMAT': self.execute_s,
+            'SB_FORMAT': self.execute_sb,
+            'U_FORMAT': self.execute_u,
+            'UJ_FORMAT': self.execute_uj
+        })
+        funcs[ic['ins_format']](ic)
+
+        # match case pattern:
+        # match ic['ins_format']:
+        #     case 'R_FORMAT':
+        #         self.execute_r(ic)
+        #     case 'I_FORMAT':
+        #         self.execute_i(ic)
+        #     case 'S_FORMAT':
+        #         self.execute_s(ic)
+        #     case 'SB_FORMAT':
+        #         self.execute_sb(ic)
+        #     case 'U_FORMAT':
+        #         self.execute_u(ic)
+        #     case 'UJ_FORMAT':
+        #         self.execute_uj(ic)
+        #     case _:
+        #         raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
+
+        # if ic['ins_format'] == 'R_FORMAT':
+        #     self.execute_r(ic)
+        # elif ic['ins_format'] == 'I_FORMAT':
+        #     self.execute_i(ic)
+        # elif ic['ins_format'] == 'S_FORMAT':
+        #     self.execute_s(ic)
+        # elif ic['ins_format'] == 'SB_FORMAT':
+        #     self.execute_sb(ic)
+        # elif ic['ins_format'] == 'U_FORMAT':
+        #     self.execute_u(ic)
+        # elif ic['ins_format'] == 'UJ_FORMAT':
+        #     self.execute_uj(ic)
+        # else:
+        #     raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
+
+    def step(self):
+        '''Executa um ciclo de instrução'''
+        instruction = self.fetch()
+        ic = self.decoder.decode(instruction)
+        self.execute(ic)
+
+    def execute_r(self, ic):
+        """Executa instruções do formato R"""
+        # Implementar a lógica de execução para instruções do formato R
+        pass
+
+    def execute_i(self, ic):
+        """Executa instruções do formato I"""
+        # Implementar a lógica de execução para instruções do formato I
+        pass
+
+    def execute_s(self, ic):
+        """Executa instruções do formato S"""
+        # Implementar a lógica de execução para instruções do formato S
+        pass
+
+    def execute_sb(self, ic):
+        """Executa instruções do formato SB"""
+        # Implementar a lógica de execução para instruções do formato SB
+        pass
+
+    def execute_u(self, ic):
+        """Executa instruções do formato U"""
+        # Implementar a lógica de execução para instruções do formato U
+        pass
+
+    def execute_uj(self, ic):
+        """Executa instruções do formato UJ"""
+        # Implementar a lógica de execução para instruções do formato UJ
+        pass
