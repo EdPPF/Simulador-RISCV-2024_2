@@ -1,4 +1,5 @@
 from collections import defaultdict
+from instruction_set import InstructionSet
 from decoder import Decoder
 from memory import Memory
 from cpu import xregs
@@ -10,7 +11,7 @@ class Executor:
     def __init__(self, registers, memory) -> None:
         self.xregs = registers
         self.memory = memory
-        self.pc = 0 #0x0?
+        self.pc = 0 # 0x0?
         self.decoder = Decoder()
 
     def fetch(self) -> str:
@@ -50,21 +51,6 @@ class Executor:
             case _:
                 raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
 
-        # if ic['ins_format'] == 'R_FORMAT':
-        #     self.execute_r(ic)
-        # elif ic['ins_format'] == 'I_FORMAT':
-        #     self.execute_i(ic)
-        # elif ic['ins_format'] == 'S_FORMAT':
-        #     self.execute_s(ic)
-        # elif ic['ins_format'] == 'SB_FORMAT':
-        #     self.execute_sb(ic)
-        # elif ic['ins_format'] == 'U_FORMAT':
-        #     self.execute_u(ic)
-        # elif ic['ins_format'] == 'UJ_FORMAT':
-        #     self.execute_uj(ic)
-        # else:
-        #     raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
-
     def step(self):
         '''Executa um ciclo de instrução'''
         instruction = self.fetch()
@@ -72,9 +58,65 @@ class Executor:
         self.execute(ic)
 
     def execute_r(self, ic):
-        """Executa instruções do formato R"""
-        # Implementar a lógica de execução para instruções do formato R
-        pass
+        """
+        Executa instruções do formato R - Registrador para Registrador\n
+        Lê os registradores `rs1` e `rs2`como fonte dos operadores e escreve o resultado no registrador `rd`.\n
+        Os campos `funct7` e `funct3` selecionam o tipo da operação.\n
+        ```
+        funct7  rs2  rs1  funct3        rd  opcode
+        7       5    5    3             5   7
+        0000000 src2 src1 ADD/SLT/SLTU dest OP
+        0000000 src2 src1 AND/OR/XOR   dest OP
+        0000000 src2 src1 SLL/SRL      dest OP     SLL e SRL não implementadas!
+        0100000 src2 src1 SUB/SRA      dest OP     SRA não implementada!
+        ```
+        """
+        fields = Decoder().decode(ic)
+        rs1 = self.xregs[fields['rs1']]
+        rs2 = self.xregs[fields['rs2']]
+        rd = fields['rd']
+        funct3 = fields['funct3']
+        funct7 = fields['funct7']
+        opcode = fields['opcode']
+        match funct7:
+            case 0: # 0000000
+                match funct3:
+                    # ADD
+                    case 0: # 000
+                        InstructionSet().add(rd, rs1, rs2)
+                    # SLT
+                    case 1: # 001
+                        InstructionSet().slt(rd, rs1, rs2)
+                    # SLTU
+                    case 2: # 010
+                        InstructionSet().sltu(rd, rs1, rs2)
+                    # AND
+                    case 3: # 011
+                        InstructionSet().sand(rd, rs1, rs2)
+                    # OR
+                    case 4: # 011
+                        InstructionSet().sor(rd, rs1, rs2)
+                    # XOR
+                    case 5: # 100
+                        InstructionSet().xor(rd, rs1, rs2)
+                    # SLL
+                    case 6: # 101
+                        raise NotImplementedError("Instrução SLL não implementada neste projeto!")
+                    # SRL
+                    case 7: # 110
+                        raise NotImplementedError("Instrução SRL não implementada neste projeto!")
+                    case _:
+                        raise ValueError(f"funct3 não reconhecido: {funct3}")
+            case 32: # 0100000
+                match funct3:
+                    # SUB
+                    case 0: # 000
+                        InstructionSet().sub(rd, rs1, rs2)
+                    # SRA
+                    case 5: # 101
+                        raise NotImplementedError("Instrução SRA não implementada neste projeto!")
+                    case _:
+                        raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_i(self, ic):
         """Executa instruções do formato I"""
