@@ -230,5 +230,21 @@ class Executor:
                 InstructionSet().lui(rd, imm)
 
     def execute_j(self, ic):
-        """Executa instruções do formato J"""
-        pass
+        """
+        Executa instruções do formato J - Jump.\n
+        ```
+        imm[20] imm[10:1] imm[11] imm[19:12] rd  opcode
+        1       10        1       8          5   7
+        ```
+        """
+        opcode = ic['opcode']
+        imm = ic['imm21']
+        rd = ic['rd']
+        rs1 = ic['rs1']
+        match opcode:
+            case 0x6F: # 1101111 JAL
+                InstructionSet().jal(rd, imm)
+            case 0x67: # 1100111 JALR
+                InstructionSet().jalr(rd, rs1, imm)
+            case _:
+                raise ValueError(f"opcode não reconhecido: {opcode}")
