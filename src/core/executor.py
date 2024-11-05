@@ -186,9 +186,7 @@ class Executor:
 
     def execute_b(self, ic):
         """
-        Executa instruções do formato B.\n
-        Lê os registradores `rs1` e `rs2` como fonte dos operadores e escreve o resultado no registrador `rd`.\n
-        Os campos `funct3` e `funct7` selecionam o tipo da operação.\n
+        Executa instruções do formato B - Branch.\n
         ```
         imm[12] imm[10:5] rs2  rs1 funct3 imm[4:1] imm[11] opcode
         1       6         5    5   3      4        1       7
@@ -215,8 +213,21 @@ class Executor:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_u(self, ic):
-        """Executa instruções do formato U"""
-        pass
+        """
+        Executa instruções do formato U - Upper.\n
+        ```
+        imm[31:12] rd  opcode
+        20         5   7
+        ```
+        """
+        rd = ic['rd']
+        imm = ic['imm20_u']
+        opcode = ic['opcode']
+        match opcode:
+            case 0x17: # 0010111 AUIPC
+                InstructionSet().auipc(rd, imm)
+            case 0x37: # 0110111 LUI
+                InstructionSet().lui(rd, imm)
 
     def execute_j(self, ic):
         """Executa instruções do formato J"""
