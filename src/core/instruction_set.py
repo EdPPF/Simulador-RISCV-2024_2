@@ -202,18 +202,19 @@ class InstructionSet:
         - imprimir inteiro
         - imprimir string
         - encerrar programa"""
-        # imprimir inteiro. xregs[17] é o registrador a7
-        if self.xregs[17] == 1:
-            print(self.xregs[10])
-        # imprimir string:
-        elif self.xregs[17] == 4:
-            address = self.xregs[10]
-            while True:
-                byte = self.xregs[0].MEM[address] # self.xregs[0] é o objeto Memory???
-                if byte == 0:
-                    break
-                print(chr(byte), end='')
-                address += 1
-        # encerrar programa:
-        elif self.xregs[17] == 10:
-            exit(0)
+        a0 = self.xregs[10]          # Registrador a0
+        syscall_num = self.xregs[17] # Registrador a7
+
+        match syscall_num:
+            case 1: # imprimir inteiro
+                print(a0)
+            case 4: # imprimir string
+                address = a0
+                while True:
+                    byte = self.xregs[0].MEM[address] # self.xregs[0] é o objeto Memory???
+                    if byte == 0:
+                        break
+                    print(chr(byte), end='')
+                    address += 1
+            case 10: # encerrar programa
+                exit(0)

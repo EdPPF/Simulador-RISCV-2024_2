@@ -128,12 +128,27 @@ class Executor:
         0000000   shamt[4:0] src SRLI   dest OP-IMM
         0100000   shamt[4:0] src SRAI   dest OP-IMM
         ```
+        ECALL:
+        ```
+        funct12 rs1 funct3 rd opcode
+        12      5   3      5  7
+        ECALL   0   PRIV   0  SYSTEM
+        ```
         """
         rs1 = self.xregs[ic['rs1']]
         rd = ic['rd']
         imm = ic['imm12_i']
         funct3 = ic['funct3']
         funct7 = ic['funct7']
+        opcode = ic['opcode']
+
+        if opcode == 0x73: # System opcode for ECALL
+            if imm == 0x00:
+                InstructionSet().ecall()
+            else:
+                raise ValueError(f"Imediato não reconhecido: {imm}")
+            return
+
         match funct3:
             case 0x00: # 000 ADDI
                 InstructionSet().addi(rd, rs1, imm)
