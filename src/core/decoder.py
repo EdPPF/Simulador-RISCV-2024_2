@@ -26,14 +26,13 @@ class Decoder:
         # Determina o formato da instrução:
         if opcode in [0x33, 0x3B]:  # R-type
             ins_format = 'R_FORMAT'
-
+        elif opcode in [0x13, 0x67, 0x03]:  # I-type. A única que será usada aqui no RV32I é a 0x13. A 0x03 é para carregamento de memória, que está implementado em memory.py
             """
             Opcodes usados para identificar instruções do tipo I:
                 0x13: Operações aritméticas imediatas, como ADDI (Add Immediate), SLTI (Set Less Than Immediate), etc.
                 0x67: Instrução JALR (Jump And Link Register), que é uma instrução de salto condicional do tipo I.
                 0x03: Instruções de carregamento de memória do tipo I, como LB (Load Byte), LH (Load Halfword), LW (Load Word), etc.
             """
-        elif opcode in [0x13, 0x67, 0x03]:  # I-type. A única que será usada aqui no RV32I é a 0x13. A 0x03 é para carregamento de memória, que está implementado em memory.py
             ins_format = 'I_FORMAT'
         elif opcode in [0x23]:  # S-type
             ins_format = 'S_FORMAT'

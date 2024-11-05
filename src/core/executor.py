@@ -1,13 +1,13 @@
-from collections import defaultdict
+# from collections import defaultdict # Para usar o dict dispatch pattern
 from instruction_set import InstructionSet
 from decoder import Decoder
-from memory import Memory
 from cpu import xregs
 
-# Função execute() para executar instruções
-# A função execute() executa a instrução que foi lida pela função fetch() e decodificada por decode()
 
 class Executor:
+    """
+    Função execute(): executa a instrução que foi lida pela função `fetch()` e decodificada por `Decoder.decode()`.
+    """
     def __init__(self, registers, memory) -> None:
         self.xregs = registers
         self.memory = memory
@@ -20,8 +20,11 @@ class Executor:
         self.pc += 4
         return instruction
 
-    def execute(self, ic):
-        '''Executa a instrução de acordo com o formato'''
+    def execute(self, ic: dict[str]):
+        '''
+        Executa a instrução de acordo com o formato.\n
+        `ic` é a instrução decodificada, que contém os campos da instrução e seu formato.
+        '''
 
         # Dict dispatch pattern. Bem legal pra substituir if-elif-else, apesar de eu poder usar match case no Python 3.10:
         # funcs = defaultdict(lambda *args: lambda *a: ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}"), {
@@ -34,7 +37,6 @@ class Executor:
         # })
         # funcs[ic['ins_format']](ic)
 
-        # match case pattern:
         match ic['ins_format']:
             case 'R_FORMAT':
                 self.execute_r(ic)
@@ -53,9 +55,9 @@ class Executor:
 
     def step(self):
         '''Executa um ciclo de instrução'''
-        instruction = self.fetch()
-        ic = self.decoder.decode(instruction)
-        self.execute(ic)
+        instruction = self.fetch()            # Lê a instrução da memória
+        ic = self.decoder.decode(instruction) # Retorna os campos da instrução e seu formato
+        self.execute(ic)                      # Executa a instrução
 
     def execute_r(self, ic):
         """
@@ -71,12 +73,11 @@ class Executor:
         0100000 src2 src1 SUB/SRA      dest OP     SRA não implementada!
         ```
         """
-        fields = Decoder().decode(ic)
-        rs1 = self.xregs[fields['rs1']]
-        rs2 = self.xregs[fields['rs2']]
-        rd = fields['rd']
-        funct3 = fields['funct3']
-        funct7 = fields['funct7']
+        rs1 = self.xregs[ic['rs1']]
+        rs2 = self.xregs[ic['rs2']]
+        rd = ic['rd']
+        funct3 = ic['funct3']
+        funct7 = ic['funct7']
         match funct7:
             case 0x00: # 0000000
                 match funct3:
@@ -128,12 +129,11 @@ class Executor:
         0100000   shamt[4:0] src SRAI   dest OP-IMM
         ```
         """
-        fields = Decoder().decode(ic)
-        rs1 = self.xregs[fields['rs1']]
-        rd = fields['rd']
-        imm = fields['imm12_i']
-        funct3 = fields['funct3']
-        funct7 = fields['funct7']
+        rs1 = self.xregs[ic['rs1']]
+        rd = ic['rd']
+        imm = ic['imm12_i']
+        funct3 = ic['funct3']
+        funct7 = ic['funct7']
         match funct3:
             case 0x00: # 000 ADDI
                 InstructionSet().addi(rd, rs1, imm)
@@ -160,9 +160,29 @@ class Executor:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_s(self, ic):
-        """Executa instruções do formato S"""
-        # Implementar a lógica de execução para instruções do formato S
-        pass
+        """
+        Executa instruções do formato S - Store.\n
+        Lê os registradores `rs1` e `rs2` como fonte dos operadores e escreve o resultado no registrador `rd`.\n
+        Os campos `funct3` e `funct7` selecionam o tipo da operação.\n
+        ```
+        imm[11:5]    rs2 rs1  funct3 imm[4:0]    opcode
+        7            5   5    3      5           7
+        offset[11:5] src base width  offset[4:0] STORE
+        ```
+        """
+        rs1 = self.xregs[ic['rs1']]
+        rs2 = self.xregs[ic['rs2']]
+        imm = ic['imm12_s']
+        funct3 = ic['funct3']
+        match funct3:
+            case 0x00: # 000 SB
+                self.memory.sb(rs1, imm, rs2)
+            case 0x01: # 001 SH
+                raise NotImplementedError("Instrução SH não implementada neste projeto!")
+            case 0x02: # 010 SW
+                self.memory.sw(rs1, imm, rs2)
+            case _:
+                raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_sb(self, ic):
         """Executa instruções do formato SB"""
