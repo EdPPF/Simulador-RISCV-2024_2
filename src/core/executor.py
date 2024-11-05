@@ -44,12 +44,12 @@ class Executor:
                 self.execute_i(ic)
             case 'S_FORMAT':
                 self.execute_s(ic)
-            case 'SB_FORMAT':
-                self.execute_sb(ic)
+            case 'B_FORMAT':
+                self.execute_b(ic)
             case 'U_FORMAT':
                 self.execute_u(ic)
-            case 'UJ_FORMAT':
-                self.execute_uj(ic)
+            case 'J_FORMAT':
+                self.execute_j(ic)
             case _:
                 raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
 
@@ -184,17 +184,40 @@ class Executor:
             case _:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
-    def execute_sb(self, ic):
-        """Executa instruções do formato SB"""
-        # Implementar a lógica de execução para instruções do formato SB
-        pass
+    def execute_b(self, ic):
+        """
+        Executa instruções do formato B.\n
+        Lê os registradores `rs1` e `rs2` como fonte dos operadores e escreve o resultado no registrador `rd`.\n
+        Os campos `funct3` e `funct7` selecionam o tipo da operação.\n
+        ```
+        imm[12] imm[10:5] rs2  rs1 funct3 imm[4:1] imm[11] opcode
+        1       6         5    5   3      4        1       7
+        ```
+        """
+        rs1 = self.xregs[ic['rs1']]
+        rs2 = self.xregs[ic['rs2']]
+        imm = ic['imm13']
+        funct3 = ic['funct3']
+        match funct3:
+            case 0x00: # 000 BEQ
+                InstructionSet().beq(rs1, rs2, imm)
+            case 0x01: # 001 BNE
+                InstructionSet().bne(rs1, rs2, imm)
+            case 0x04: # 100 BLT
+                InstructionSet().blt(rs1, rs2, imm)
+            case 0x05: # 101 BGE
+                InstructionSet().bge(rs1, rs2, imm)
+            case 0x07: # 111 BGEU
+                InstructionSet().bgeu(rs1, rs2, imm)
+            case _:
+                raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_u(self, ic):
         """Executa instruções do formato U"""
         # Implementar a lógica de execução para instruções do formato U
         pass
 
-    def execute_uj(self, ic):
+    def execute_j(self, ic):
         """Executa instruções do formato UJ"""
         # Implementar a lógica de execução para instruções do formato UJ
         pass

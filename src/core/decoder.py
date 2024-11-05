@@ -36,12 +36,12 @@ class Decoder:
             ins_format = 'I_FORMAT'
         elif opcode in [0x23]:  # S-type
             ins_format = 'S_FORMAT'
-        elif opcode in [0x63]:  # SB-type
-            ins_format = 'SB_FORMAT'
+        elif opcode in [0x63]: # B-type
+            ins_format = 'B_FORMAT'
         elif opcode in [0x37, 0x17]:  # U-type
             ins_format = 'U_FORMAT'
-        elif opcode in [0x6F]:  # UJ-type
-            ins_format = 'UJ_FORMAT'
+        elif opcode in [0x6F]:  # J-type
+            ins_format = 'J_FORMAT'
         else:
             raise ValueError(f"Opcode não reconhecido: {opcode}")
 
