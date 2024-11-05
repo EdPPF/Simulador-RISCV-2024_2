@@ -207,6 +207,8 @@ class Executor:
                 InstructionSet().blt(rs1, rs2, imm)
             case 0x05: # 101 BGE
                 InstructionSet().bge(rs1, rs2, imm)
+            case 0x06: # 110 BLTU
+                InstructionSet().bltu(rs1, rs2, imm)
             case 0x07: # 111 BGEU
                 InstructionSet().bgeu(rs1, rs2, imm)
             case _:
@@ -214,10 +216,8 @@ class Executor:
 
     def execute_u(self, ic):
         """Executa instruções do formato U"""
-        # Implementar a lógica de execução para instruções do formato U
         pass
 
     def execute_j(self, ic):
-        """Executa instruções do formato UJ"""
-        # Implementar a lógica de execução para instruções do formato UJ
+        """Executa instruções do formato J"""
         pass
