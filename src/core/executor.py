@@ -77,51 +77,87 @@ class Executor:
         rd = fields['rd']
         funct3 = fields['funct3']
         funct7 = fields['funct7']
-        opcode = fields['opcode']
         match funct7:
-            case 0: # 0000000
+            case 0x00: # 0000000
                 match funct3:
-                    # ADD
-                    case 0: # 000
+                    case 0x00: # 000 ADD
                         InstructionSet().add(rd, rs1, rs2)
-                    # SLT
-                    case 1: # 001
-                        InstructionSet().slt(rd, rs1, rs2)
-                    # SLTU
-                    case 2: # 010
-                        InstructionSet().sltu(rd, rs1, rs2)
-                    # AND
-                    case 3: # 011
-                        InstructionSet().sand(rd, rs1, rs2)
-                    # OR
-                    case 4: # 011
-                        InstructionSet().sor(rd, rs1, rs2)
-                    # XOR
-                    case 5: # 100
-                        InstructionSet().xor(rd, rs1, rs2)
-                    # SLL
-                    case 6: # 101
+                    case 0x01: # 001 SLL
                         raise NotImplementedError("Instrução SLL não implementada neste projeto!")
-                    # SRL
-                    case 7: # 110
+                    case 0x02: # 010 SLT
+                        InstructionSet().slt(rd, rs1, rs2)
+                    case 0x03: # 011 SLTU
+                        InstructionSet().sltu(rd, rs1, rs2)
+                    case 0x05: # 100 XOR
+                        InstructionSet().xor(rd, rs1, rs2)
+                    case 0x04: # 101 SRL
                         raise NotImplementedError("Instrução SRL não implementada neste projeto!")
+                    case 0x06: # 110 OR
+                        InstructionSet().sor(rd, rs1, rs2)
+                    case 0x07: # 111 AND
+                        InstructionSet().sand(rd, rs1, rs2)
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
-            case 32: # 0100000
+            case 0x20: # 0100000
                 match funct3:
-                    # SUB
-                    case 0: # 000
+                    case 0x00: # 000 SUB
                         InstructionSet().sub(rd, rs1, rs2)
-                    # SRA
-                    case 5: # 101
+                    case 0x05: # 101 SRA
                         raise NotImplementedError("Instrução SRA não implementada neste projeto!")
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_i(self, ic):
-        """Executa instruções do formato I"""
-        # Implementar a lógica de execução para instruções do formato I
-        pass
+        """
+        Executa instruções do formato I - Registrador para Registrador com Imediato\n
+        O campo `funct3` seleciona o tipo da operação.\n
+        The immediate opcode OP-IMM==7'b001_0011. When opcode==OP-IMM==7'b001_0011,
+        it proves that the instruction is an I-type instruction, and the specific behavior of this instruction is determined by the value of funct3.
+        ```
+        imm[11:0]         rs1 funct3        rd   opcode
+        12                5   3             5    7
+        I-immediate[11:0] src ADDI/SLTI[U]  dest OP-IMM    SLTI[U] não implementada!
+        I-immediate[11:0] src ANDI/ORI/XORI dest OP-IMM    XORI não implementada!
+        ```
+        Instruções de shift:
+        ```
+        imm[11:5] imm[4:0]   rs1 funct3 rd   opcode
+        7         5          5   3      5    7
+        0000000   shamt[4:0] src SLLI   dest OP-IMM
+        0000000   shamt[4:0] src SRLI   dest OP-IMM
+        0100000   shamt[4:0] src SRAI   dest OP-IMM
+        ```
+        """
+        fields = Decoder().decode(ic)
+        rs1 = self.xregs[fields['rs1']]
+        rd = fields['rd']
+        imm = fields['imm12_i']
+        funct3 = fields['funct3']
+        funct7 = fields['funct7']
+        match funct3:
+            case 0x00: # 000 ADDI
+                InstructionSet().addi(rd, rs1, imm)
+            case 0x02: # 010 SLTI
+                raise NotImplementedError("Instrução SLTI não implementada neste projeto!")
+            case 0x03: # 011 SLTIU
+                raise NotImplementedError("Instrução SLTIU não implementada neste projeto!")
+            case 0x07: # 111 ANDI
+                InstructionSet().andi(rd, rs1, imm)
+            case 0x06: # 110 ORI
+                InstructionSet().ori(rd, rs1, imm)
+            case 0x04: # 100 XORI
+                raise NotImplementedError("Instrução XORI não implementada neste projeto!")
+            case 0x01: # 001 SLLI
+                InstructionSet().slli(rd, rs1, imm)
+            case 0x05: # 101 SRLI/SRAI
+                if funct7 == 0x00:
+                    InstructionSet().srli(rd, rs1, imm)
+                elif funct7 == 0x20:
+                    InstructionSet().srai(rd, rs1, imm)
+                else:
+                    raise ValueError(f"funct7 não reconhecido: {funct7}")
+            case _:
+                raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_s(self, ic):
         """Executa instruções do formato S"""
