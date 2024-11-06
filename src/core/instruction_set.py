@@ -210,11 +210,13 @@ class InstructionSet:
                 print(a0)
             case 4: # imprimir string
                 address = a0
-                while True:
-                    byte = self.xregs[0].MEM[address] # self.xregs[0] é o objeto Memory???
-                    if byte == 0:
-                        break
-                    print(chr(byte), end='')
+                string = ""
+                while self.memory.MEM[address] != 0:
+                    string += chr(self.memory.MEM[address])
                     address += 1
+                print(string)
             case 10: # encerrar programa
+                print("Programa encerrado.")
                 exit(0)
+            case _:
+                raise ValueError(f"Syscall não reconhecida: {syscall_num}")
