@@ -1,5 +1,33 @@
-# Implementação da CPU (registradores, ciclo de execução)
+"""
+Módulo de inicialização do processador com banco de registradores e definição de variáveis globais.
+"""
+
 import numpy as np
+from memory import Memory
+from executor import Executor
+
+class ProgramCounterOverflowError(Exception):
+    """Exceção lançada quando o Program Counter excede o limite do segmento de código."""
+    pass
+
+class CPU(Executor):
+    def __init__(self, program_path):
+        xregs = np.zeros(32, dtype=np.uint32) # yeah
+        """Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
+        memory = Memory()
+        # Carregar os dados do programa na memória:
+        memory.load_mem(program_path)
+        super().__init__(xregs, memory) # Inicializa o Executor com o banco de registradores e a memória
+
+    def run(self):
+        """
+        Executa o programa até encontrar uma chamada de sistema para encerramento, ou até o pc ultrapassar o limite do segmento de código (2k words).
+        """
+        while True:
+            self.step()
+            if self.regs[32] >= 2048 * 4: # 2k words
+                raise ProgramCounterOverflowError("PC ultrapassou o limite do segmento de código.")
+
 
 """
 Os registradores pc e ri, e também os campos da instrução (opcode, rs1, rs2, rd,
@@ -9,9 +37,6 @@ instruções. Os registradores sp e gp fazem parte do banco de registradores, e
 armazenam os endereços das áreas de memória de pilha e dados globais,
 respectivamente
 """
-
-xregs = np.zeros(32, dtype=np.uint32) # yeah
-"""Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
 
 # Campos da instrução
 '''opcode = np.uint32(0)
