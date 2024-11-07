@@ -10,6 +10,27 @@ Este trabalho consiste na implementação de um simulador da arquitetura RV32I.
 
 Nem todas as instruções serão implementadas!
 
+## Instruções Implementadas
+
+```bash
+add, addi, and, andi, auipc,
+beq, bne, bge, bgeu, blt,
+bltu, jal, jalr, lb, or,
+lbu, lw, lui, slt, sltu,
+ori, sb, slli, srai, srli,
+sub, sw, xor, ecall
+```
+
+Syscall:
+
+- imprimir inteiro
+- imprimir string
+- encerrar programa
+
+## Bibliotecas Externas Utilizadas
+
+Apenas `Numpy`!
+
 # Como Rodar o Programa
 
 Clone o repositório e navegue até ele:
@@ -31,24 +52,7 @@ Execute o simulador:
 python src/main.py
 ```
 
-## Instruções Implementadas
-
-```bash
-add, addi, and, andi, auipc,
-beq, bne, bge, bgeu, blt,
-bltu, jal, jalr, lb, or,
-lbu, lw, lui, slt, sltu,
-ori, sb, slli, srai, srli,
-sub, sw, xor, ecall
-```
-
-Syscall:
-
-- imprimir inteiro
-- imprimir string
-- encerrar programa
-
-## Estrutura do Repositório:
+# Estrutura do Repositório
 
 ```bash
 rv32i-simulator/
@@ -60,12 +64,14 @@ rv32i-simulator/
 │   │   ├── executor.py        # Função execute() para executar instruções
 │   │   ├── instruction_set.py # Conjunto de instruções RV32I
 │   │   └── memory.py          # Implementação da memória (load/store)
-│   ├── utils/                 # Utilitários e funções auxiliares
+│   ├── tests/                 # Utilitários e funções auxiliares
 │   │   ├── __init__.py
-│   │   └── binaries.py        # Funções para conversão e manipulação de binários
+│   │   ├── test_cpu.py
+│   │   ├── test_decoder.py
+│   │   ├── test_executor.py
+│   │   ├── test_instructions.py
+│   │   └── test_memory.py
 │   └── main.py                # Ponto de entrada do simulador
-├── tests/
-│   └── TODO
 ├── .gitignore
 ├── requirements.txt
 └── README.md
