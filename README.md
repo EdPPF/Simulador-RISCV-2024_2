@@ -29,7 +29,8 @@ Syscall:
 
 ## Bibliotecas Externas Utilizadas
 
-Apenas `Numpy`!
+- `Numpy`;
+- `pytest` - verifique requirements.txt para a lista completa de dependências dessa biblioteca.
 
 # Como Rodar o Programa
 
