@@ -1,3 +1,26 @@
+"""
+Módulo para decodificar instruções do conjunto RV32I.\n
+A partir da instrução em binário, extrai os campos da instrução e determina seu formato.\n
+O retorno é no padrão:
+```python
+{
+    'opcode': opcode,
+    'rs1': rs1,
+    'rs2': rs2,
+    'rd': rd,
+    'shamt': shamt,
+    'funct3': funct3,
+    'funct7': funct7,
+    'imm12_i': imm12_i,
+    'imm12_s': imm12_s,
+    'imm13': imm13,
+    'imm21': imm21,
+    'imm20_u': imm20_u,
+    'ins_format': ins_format
+}
+```
+"""
+
 import numpy as np
 
 class Decoder:

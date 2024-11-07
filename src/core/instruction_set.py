@@ -25,11 +25,7 @@ class InstructionSet:
     """Conjunto de instruções RV32I."""
     def __init__(self, regs) -> None:
         self.xregs = regs
-        """Banco de registradores. Definido em `cpu.py`:
-        ```python
-        xregs = np.zeros(33, dtype=np.uint32)
-        ```
-        """
+        """Banco de registradores. Definido em `cpu.py` como uma lista de inteiros de 32 bits sem sinal."""
 
     def _gera_imm(self, ri):
         '''Estende o sinal do imediato de 12 bits para 32 bits.'''
@@ -216,7 +212,7 @@ class InstructionSet:
                     address += 1
                 print(string)
             case 10: # encerrar programa
-                print("Programa encerrado.")
+                print("Programa encerrado com sucesso.\n  Código de saída: 0")
                 exit(0)
             case _:
                 raise ValueError(f"Syscall não reconhecida: {syscall_num}")
