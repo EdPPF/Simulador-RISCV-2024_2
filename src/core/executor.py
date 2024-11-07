@@ -1,7 +1,7 @@
 # from collections import defaultdict # Para usar o dict dispatch pattern
 from instruction_set import InstructionSet
 from decoder import Decoder
-from cpu import xregs
+# from cpu import xregs
 
 
 class Executor:
@@ -13,6 +13,7 @@ class Executor:
         self.memory = memory
         self.pc = 0 # 0x0?
         self.decoder = Decoder()
+        self.instruction_set = InstructionSet(self.xregs)
 
     def fetch(self) -> str:
         '''Lê a instrução da memória e incrementa o PC.'''
@@ -82,27 +83,27 @@ class Executor:
             case 0x00: # 0000000
                 match funct3:
                     case 0x00: # 000 ADD
-                        InstructionSet().add(rd, rs1, rs2)
+                        self.instruction_set.add(rd, rs1, rs2)
                     case 0x01: # 001 SLL
                         raise NotImplementedError("Instrução SLL não implementada neste projeto!")
                     case 0x02: # 010 SLT
-                        InstructionSet().slt(rd, rs1, rs2)
+                        self.instruction_set.slt(rd, rs1, rs2)
                     case 0x03: # 011 SLTU
-                        InstructionSet().sltu(rd, rs1, rs2)
+                        self.instruction_set.sltu(rd, rs1, rs2)
                     case 0x05: # 100 XOR
-                        InstructionSet().xor(rd, rs1, rs2)
+                        self.instruction_set.xor(rd, rs1, rs2)
                     case 0x04: # 101 SRL
                         raise NotImplementedError("Instrução SRL não implementada neste projeto!")
                     case 0x06: # 110 OR
-                        InstructionSet().sor(rd, rs1, rs2)
+                        self.instruction_set.sor(rd, rs1, rs2)
                     case 0x07: # 111 AND
-                        InstructionSet().sand(rd, rs1, rs2)
+                        self.instruction_set.sand(rd, rs1, rs2)
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
             case 0x20: # 0100000
                 match funct3:
                     case 0x00: # 000 SUB
-                        InstructionSet().sub(rd, rs1, rs2)
+                        self.instruction_set.sub(rd, rs1, rs2)
                     case 0x05: # 101 SRA
                         raise NotImplementedError("Instrução SRA não implementada neste projeto!")
                     case _:
@@ -144,31 +145,31 @@ class Executor:
 
         if opcode == 0x73: # System opcode for ECALL
             if imm == 0x00:
-                InstructionSet().ecall()
+                self.instruction_set.ecall()
             else:
                 raise ValueError(f"Imediato não reconhecido: {imm}")
             return
 
         match funct3:
             case 0x00: # 000 ADDI
-                InstructionSet().addi(rd, rs1, imm)
+                self.instruction_set.addi(rd, rs1, imm)
             case 0x02: # 010 SLTI
                 raise NotImplementedError("Instrução SLTI não implementada neste projeto!")
             case 0x03: # 011 SLTIU
                 raise NotImplementedError("Instrução SLTIU não implementada neste projeto!")
             case 0x07: # 111 ANDI
-                InstructionSet().andi(rd, rs1, imm)
+                self.instruction_set.andi(rd, rs1, imm)
             case 0x06: # 110 ORI
-                InstructionSet().ori(rd, rs1, imm)
+                self.instruction_set.ori(rd, rs1, imm)
             case 0x04: # 100 XORI
                 raise NotImplementedError("Instrução XORI não implementada neste projeto!")
             case 0x01: # 001 SLLI
-                InstructionSet().slli(rd, rs1, imm)
+                self.instruction_set.slli(rd, rs1, imm)
             case 0x05: # 101 SRLI/SRAI
                 if funct7 == 0x00:
-                    InstructionSet().srli(rd, rs1, imm)
+                    self.instruction_set.srli(rd, rs1, imm)
                 elif funct7 == 0x20:
-                    InstructionSet().srai(rd, rs1, imm)
+                    self.instruction_set.srai(rd, rs1, imm)
                 else:
                     raise ValueError(f"funct7 não reconhecido: {funct7}")
             case _:
@@ -213,17 +214,17 @@ class Executor:
         funct3 = ic['funct3']
         match funct3:
             case 0x00: # 000 BEQ
-                InstructionSet().beq(rs1, rs2, imm)
+                self.instruction_set.beq(rs1, rs2, imm)
             case 0x01: # 001 BNE
-                InstructionSet().bne(rs1, rs2, imm)
+                self.instruction_set.bne(rs1, rs2, imm)
             case 0x04: # 100 BLT
-                InstructionSet().blt(rs1, rs2, imm)
+                self.instruction_set.blt(rs1, rs2, imm)
             case 0x05: # 101 BGE
-                InstructionSet().bge(rs1, rs2, imm)
+                self.instruction_set.bge(rs1, rs2, imm)
             case 0x06: # 110 BLTU
-                InstructionSet().bltu(rs1, rs2, imm)
+                self.instruction_set.bltu(rs1, rs2, imm)
             case 0x07: # 111 BGEU
-                InstructionSet().bgeu(rs1, rs2, imm)
+                self.instruction_set.bgeu(rs1, rs2, imm)
             case _:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
@@ -240,9 +241,9 @@ class Executor:
         opcode = ic['opcode']
         match opcode:
             case 0x17: # 0010111 AUIPC
-                InstructionSet().auipc(rd, imm)
+                self.instruction_set.auipc(rd, imm)
             case 0x37: # 0110111 LUI
-                InstructionSet().lui(rd, imm)
+                self.instruction_set.lui(rd, imm)
 
     def execute_j(self, ic):
         """
@@ -258,8 +259,8 @@ class Executor:
         rs1 = ic['rs1']
         match opcode:
             case 0x6F: # 1101111 JAL
-                InstructionSet().jal(rd, imm)
+                self.instruction_set.jal(rd, imm)
             case 0x67: # 1100111 JALR
-                InstructionSet().jalr(rd, rs1, imm)
+                self.instruction_set.jalr(rd, rs1, imm)
             case _:
                 raise ValueError(f"opcode não reconhecido: {opcode}")
