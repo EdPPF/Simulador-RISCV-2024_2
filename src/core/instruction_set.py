@@ -43,8 +43,8 @@ class InstructionSet:
         imm = self._gera_imm(imm)
         self.xregs[rd] = self.xregs[rs1] + imm
 
-    def sand(self, rd, rs1, rs2):
-        """Operação lógica AND.\n O nome sand foi escolhido para evitar conflito com a palavra reservada and."""
+    def and_(self, rd, rs1, rs2):
+        """Operação lógica AND.\n O nome foi escolhido para evitar conflito com a palavra reservada and."""
         self.xregs[rd] = self.xregs[rs1] & self.xregs[rs2]
 
     def andi(self, rd, rs1, imm):
