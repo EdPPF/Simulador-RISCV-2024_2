@@ -29,10 +29,10 @@ class InstructionSet:
 
     def _gera_imm(self, ri):
         '''Estende o sinal do imediato de 12 bits para 32 bits.'''
-        imm = np.uint32(ri) >> 20
-        if imm & 0x800:
-            imm = imm | 0xFFFFF000
-        return imm
+        imm = ri & 0xFFF           # Extrai os 12 bits menos significativos
+        if imm & 0x800:            # Se o bit de sinal (bit 11) estiver definido
+            imm = imm | 0xFFFFF000 # Extensão de sinal
+        return np.uint32(imm)
 
     def add(self, rd, rs1, rs2):
         """Adição de inteiros de 32 bits."""
