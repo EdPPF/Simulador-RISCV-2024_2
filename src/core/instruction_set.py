@@ -31,7 +31,7 @@ class InstructionSet:
         '''Estende o sinal do imediato de 12 bits para 32 bits.'''
         imm = ri & 0xFFF           # Extrai os 12 bits menos significativos
         if imm & 0x800:            # Se o bit de sinal (bit 11) estiver definido
-            imm = imm | 0xFFFFF000 # Extensão de sinal
+            imm |=  0xFFFFF000 # Extensão de sinal
         return np.uint32(imm)
 
     def add(self, rd, rs1, rs2):
@@ -54,7 +54,8 @@ class InstructionSet:
 
     def auipc(self, rd, imm):
         """*Add Upper Immediate*. Adiciona o imediato de 20 bits ao PC e armazena o resultado em rd."""
-        imm = imm << 12
+        # imm = imm << 12
+        imm = self._gera_imm(imm)
         self.xregs[rd] = self.xregs[32] + imm # PC = xregs[32]
 
 

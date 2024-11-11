@@ -12,8 +12,9 @@ class ProgramCounterOverflowError(Exception):
 
 class CPU(Executor):
     def __init__(self, code_path, data_path):
-        xregs = np.zeros(32, dtype=np.uint32) # yeah
+        xregs = np.zeros(32, dtype=np.uint32)
         """Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
+
         memory = Memory()
         # Carregar os dados do programa na memória:
         memory.load_mem(code_path, data_path)
