@@ -23,12 +23,14 @@ Syscall:
 import numpy as np
 class InstructionSet:
     """Conjunto de instruções RV32I."""
-    def __init__(self, regs) -> None:
+    def __init__(self, regs, pc) -> None:
         self.xregs = regs
         """Banco de registradores. Definido em `cpu.py` como uma lista de inteiros de 32 bits sem sinal."""
+        self.pc = pc
+        """Program Counter. Definido em `cpu.py` como um inteiro de 32 bits sem sinal."""
 
     def _gera_imm(self, ri):
-        '''Estende o sinal do imediato de 12 bits para 32 bits.'''
+        """Estende o sinal do imediato de 12 bits para 32 bits."""
         imm = ri & 0xFFF           # Extrai os 12 bits menos significativos
         if imm & 0x800:            # Se o bit de sinal (bit 11) estiver definido
             imm |=  0xFFFFF000 # Extensão de sinal
@@ -56,16 +58,16 @@ class InstructionSet:
         """*Add Upper Immediate*. Adiciona o imediato de 20 bits ao PC e armazena o resultado em rd."""
         # imm = imm << 12
         imm = self._gera_imm(imm)
-        self.xregs[rd] = self.xregs[32] + imm # PC = xregs[32]
+        self.xregs[rd] = self.pc + imm
 
 
     def beq(self, rs1, rs2, imm):
         """*Branch Equal*. Se rs1 == rs2, PC = PC + imm."""
         imm = self._gera_imm(imm)
         if self.xregs[rs1] == self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bne(self, rs1, rs2, imm):
         """*Branch Not Equal*. Se rs1 != rs2, PC = PC + imm."""
@@ -73,9 +75,9 @@ class InstructionSet:
             raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
         if self.xregs[rs1] != self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bge(self, rs1, rs2, imm):
         """*Branch Greater or Equal*. Se rs1 >= rs2, PC = PC + imm."""
@@ -86,9 +88,9 @@ class InstructionSet:
         # rs1_val = np.int32(self.xregs[rs1])
         # rs2_val = np.int32(self.xregs[rs2])
         if self.xregs[rs1] >= self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bgeu(self, rs1, rs2, imm):
         """*Branch Greater or Equal Unsigned*. Se rs1 >= rs2, PC = PC + imm."""
@@ -99,9 +101,9 @@ class InstructionSet:
         # rs1_val = np.uint32(self.xregs[rs1])
         # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] >= self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def blt(self, rs1, rs2, imm):
         """*Branch Less Than*. Se rs1 < rs2, PC = PC + imm."""
@@ -112,9 +114,9 @@ class InstructionSet:
         # rs1_val = np.int32(self.xregs[rs1])
         # rs2_val = np.int32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bltu(self, rs1, rs2, imm):
         """*Branch Less Than Unsigned*. Se rs1 < rs2, PC = PC + imm."""
@@ -125,25 +127,25 @@ class InstructionSet:
         # rs1_val = np.uint32(self.xregs[rs1])
         # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def jal(self, rd, imm):
         """*Jump and Link*. PC = PC + imm; rd = PC + 4."""
         imm = self._gera_imm(imm)
-        self.xregs[rd] = self.xregs[32] + 4
-        self.xregs[32] = self.xregs[32] + imm
+        self.xregs[rd] = self.pc + 4
+        self.pc += imm
 
     def jalr(self, rd, rs1, imm):
         """*Jump and Link Register*. PC = (x[rs1] + sext(imm[11:0])) & ~1; rd = PC + 4."""
         imm = self._gera_imm(imm)
-        temp = self.xregs[32] + 4  # PC + 4
-        self.xregs[32] = (self.xregs[rs1] + imm) & ~1  # (x[rs1] + sext(imm[11:0])) & ~1
+        temp = self.pc + 4  # PC + 4
+        self.pc = (self.xregs[rs1] + imm) & ~1  # (x[rs1] + sext(imm[11:0])) & ~1
         self.xregs[rd] = temp  # x[rd] = t
 
-    def sor(self, rd, rs1, rs2):
-        """Operação lógica OR.\n O nome sor foi escolhido para evitar conflito com a palavra reservada or."""
+    def or_(self, rd, rs1, rs2):
+        """Operação lógica OR.\n O nome sor foi escolhido para evitar conflito com a palavra reservada `or`."""
         self.xregs[rd] = self.xregs[rs1] | self.xregs[rs2]
 
 

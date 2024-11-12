@@ -11,16 +11,16 @@ class ProgramCounterOverflowError(Exception):
     pass
 
 class CPU(Executor):
-    PC = np.uint32(0)
-
     def __init__(self, code_path, data_path):
+        self.PC = np.uint32(0)
+        """Program Counter. Endereço da próxima instrução a ser executada."""
         xregs = np.zeros(32, dtype=np.uint32)
         """Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
 
         memory = Memory()
         # Carregar os dados do programa na memória:
         memory.load_mem(code_path, data_path)
-        super().__init__(xregs, memory) # Inicializa o Executor com o banco de registradores e a memória
+        super().__init__(xregs, memory, self.PC) # Inicializa o Executor com o banco de registradores e a memória
 
     def run(self):
         """
@@ -28,8 +28,8 @@ class CPU(Executor):
         """
         while True:
             self.step()
-            if self.regs[32] >= 2048 * 4: # 2k words
-                raise ProgramCounterOverflowError("PC ultrapassou o limite do segmento de código.")
+            if self.PC >= 2048 * 4: # 2k words
+                raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
 
 
 """
