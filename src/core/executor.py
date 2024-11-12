@@ -1,3 +1,11 @@
+"""
+Módulo de execução das instruções do RISC-V.\n
+É responsável por:
+- Buscar a instrução na memória;
+- Decodificar a instrução por meio do módulo `Decoder`;
+- Executar a instrução de acordo com o formato.
+"""
+
 # from collections import defaultdict # Para usar o dict dispatch pattern
 from instruction_set import InstructionSet
 from decoder import Decoder
@@ -8,12 +16,12 @@ class Executor:
     """
     Função execute(): executa a instrução que foi lida pela função `fetch()` e decodificada por `Decoder.decode()`.
     """
-    def __init__(self, registers, memory) -> None:
+    def __init__(self, registers, memory, pc) -> None:
         self.xregs = registers
         self.memory = memory
-        self.pc = 0 # 0x0?
+        self.pc = pc
         self.decoder = Decoder()
-        self.instruction_set = InstructionSet(self.xregs)
+        self.instruction_set = InstructionSet(self.xregs, self.pc)
 
     def fetch(self) -> str:
         '''Lê a instrução da memória e incrementa o PC.'''
@@ -95,9 +103,9 @@ class Executor:
                     case 0x04: # 101 SRL
                         raise NotImplementedError("Instrução SRL não implementada neste projeto!")
                     case 0x06: # 110 OR
-                        self.instruction_set.sor(rd, rs1, rs2)
+                        self.instruction_set.or_(rd, rs1, rs2)
                     case 0x07: # 111 AND
-                        self.instruction_set.sand(rd, rs1, rs2)
+                        self.instruction_set.and_(rd, rs1, rs2)
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
             case 0x20: # 0100000
