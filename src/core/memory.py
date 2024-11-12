@@ -1,4 +1,7 @@
-# Implementação da memória (load/store)
+"""
+Módulo que implementa a memória do simulador.\n
+Além de inicializar a memória, a classe Memory possui métodos para leitura e escrita de bytes e palavras e o método `load_mem` para carregar o conteúdo de um arquivo montado pelo RARS.
+"""
 
 import numpy as np
 
