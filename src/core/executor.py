@@ -118,11 +118,11 @@ class Executor:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_i(self, ic):
+        # The immediate opcode OP-IMM==7'b001_0011. When opcode==OP-IMM==7'b001_0011,
+        # it proves that the instruction is an I-type instruction, and the specific behavior of this instruction is determined by the value of funct3.
         """
         Executa instruções do formato I - Registrador para Registrador com Imediato\n
         O campo `funct3` seleciona o tipo da operação.\n
-        The immediate opcode OP-IMM==7'b001_0011. When opcode==OP-IMM==7'b001_0011,
-        it proves that the instruction is an I-type instruction, and the specific behavior of this instruction is determined by the value of funct3.
         ```
         imm[11:0]         rs1 funct3        rd   opcode
         12                5   3             5    7
