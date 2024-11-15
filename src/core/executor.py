@@ -21,7 +21,7 @@ class Executor:
         self.memory = memory
         self.pc = pc
         self.decoder = Decoder()
-        self.instruction_set = InstructionSet(self.xregs, self.pc)
+        self.instruction_set = InstructionSet(self.xregs, self.pc, self.memory)
 
     def fetch(self) -> str:
         '''Lê a instrução da memória e incrementa o PC.'''
