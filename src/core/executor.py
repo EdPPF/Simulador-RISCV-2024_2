@@ -7,8 +7,8 @@ Módulo de execução das instruções do RISC-V.\n
 """
 
 # from collections import defaultdict # Para usar o dict dispatch pattern
-from instruction_set import InstructionSet
-from decoder import Decoder
+from core.instruction_set import InstructionSet
+from core.decoder import Decoder
 # from cpu import xregs
 
 
@@ -17,6 +17,7 @@ class Executor:
     Função execute(): executa a instrução que foi lida pela função `fetch()` e decodificada por `Decoder.decode()`.
     """
     def __init__(self, registers, memory, pc) -> None:
+        self.ins_flag = ''
         self.xregs = registers
         self.memory = memory
         self.pc = pc
@@ -48,16 +49,22 @@ class Executor:
 
         match ic['ins_format']:
             case 'R_FORMAT':
+                self.ins_flag = 'R_FORMAT'
                 self.execute_r(ic)
             case 'I_FORMAT':
+                self.ins_flag = 'I_FORMAT'
                 self.execute_i(ic)
             case 'S_FORMAT':
+                self.ins_flag = 'S_FORMAT'
                 self.execute_s(ic)
             case 'B_FORMAT':
+                self.ins_flag = 'B_FORMAT'
                 self.execute_b(ic)
             case 'U_FORMAT':
+                self.ins_flag = 'U_FORMAT'
                 self.execute_u(ic)
             case 'J_FORMAT':
+                self.ins_flag = 'J_FORMAT'
                 self.execute_j(ic)
             case _:
                 raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
