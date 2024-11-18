@@ -3,8 +3,8 @@ Módulo de inicialização do processador com banco de registradores e definiç�
 """
 
 import numpy as np
-from memory import Memory
-from executor import Executor
+from core.memory import Memory
+from core.executor import Executor
 
 class ProgramCounterOverflowError(Exception):
     """Exceção lançada quando o Program Counter excede o limite do segmento de código."""
