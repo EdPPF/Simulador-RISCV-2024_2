@@ -23,16 +23,20 @@ Syscall:
 import numpy as np
 class InstructionSet:
     """Conjunto de instruções RV32I."""
-    def __init__(self, regs) -> None:
+    def __init__(self, regs, pc, memory) -> None:
         self.xregs = regs
         """Banco de registradores. Definido em `cpu.py` como uma lista de inteiros de 32 bits sem sinal."""
+        self.pc = pc
+        """Program Counter. Definido em `cpu.py` como um inteiro de 32 bits sem sinal."""
+        self.memory = memory
+        """Memória do sistema. Definida em `memory.py` como um array de inteiros de 8 bits sem sinal."""
 
     def _gera_imm(self, ri):
-        '''Estende o sinal do imediato de 12 bits para 32 bits.'''
-        imm = np.uint32(ri) >> 20
-        if imm & 0x800:
-            imm = imm | 0xFFFFF000
-        return imm
+        """Estende o sinal do imediato de 12 bits para 32 bits."""
+        # imm = ri & 0xFFF               # Extrai os 12 bits menos significativos
+        if ri & 0x800:                   # Se o bit de sinal (bit 11) estiver definido
+            return np.int32(ri | ~0xFFF) # Extensão de sinal
+        return np.int32(ri)
 
     def add(self, rd, rs1, rs2):
         """Adição de inteiros de 32 bits."""
@@ -43,8 +47,8 @@ class InstructionSet:
         imm = self._gera_imm(imm)
         self.xregs[rd] = self.xregs[rs1] + imm
 
-    def sand(self, rd, rs1, rs2):
-        """Operação lógica AND.\n O nome sand foi escolhido para evitar conflito com a palavra reservada and."""
+    def and_(self, rd, rs1, rs2):
+        """Operação lógica AND.\n O nome foi escolhido para evitar conflito com a palavra reservada `and`."""
         self.xregs[rd] = self.xregs[rs1] & self.xregs[rs2]
 
     def andi(self, rd, rs1, imm):
@@ -54,116 +58,132 @@ class InstructionSet:
 
     def auipc(self, rd, imm):
         """*Add Upper Immediate*. Adiciona o imediato de 20 bits ao PC e armazena o resultado em rd."""
-        imm = imm << 12
-        self.xregs[rd] = self.xregs[32] + imm # PC = xregs[32]
+        # imm = imm << 12
+        imm = self._gera_imm(imm)
+        self.xregs[rd] = self.pc + imm
 
 
     def beq(self, rs1, rs2, imm):
         """*Branch Equal*. Se rs1 == rs2, PC = PC + imm."""
+        if imm % 4 != 0:
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         if self.xregs[rs1] == self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bne(self, rs1, rs2, imm):
         """*Branch Not Equal*. Se rs1 != rs2, PC = PC + imm."""
         if imm % 4 != 0:
-            raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         if self.xregs[rs1] != self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bge(self, rs1, rs2, imm):
         """*Branch Greater or Equal*. Se rs1 >= rs2, PC = PC + imm."""
         if imm % 4 != 0:
-            raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         # Conversão para signed int32. Necessário?
         # rs1_val = np.int32(self.xregs[rs1])
         # rs2_val = np.int32(self.xregs[rs2])
         if self.xregs[rs1] >= self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bgeu(self, rs1, rs2, imm):
         """*Branch Greater or Equal Unsigned*. Se rs1 >= rs2, PC = PC + imm."""
         if imm % 4 != 0:
-            raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         # Conversão para unsigned int32. Necessário?
         # rs1_val = np.uint32(self.xregs[rs1])
         # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] >= self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def blt(self, rs1, rs2, imm):
         """*Branch Less Than*. Se rs1 < rs2, PC = PC + imm."""
         if imm % 4 != 0:
-            raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         # Conversão para signed int32. Necessário?
         # rs1_val = np.int32(self.xregs[rs1])
         # rs2_val = np.int32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def bltu(self, rs1, rs2, imm):
         """*Branch Less Than Unsigned*. Se rs1 < rs2, PC = PC + imm."""
         if imm % 4 != 0:
-            raise ValueError(f"Endereço de destino {imm} não está alinhado em 4 bytes.")
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         # Conversão para unsigned int32. Necessário?
         # rs1_val = np.uint32(self.xregs[rs1])
         # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
-            self.xregs[32] = self.xregs[32] + imm
+            self.pc += imm
         else:
-            self.xregs[32] = self.xregs[32] + 4
+            self.pc += 4
 
     def jal(self, rd, imm):
         """*Jump and Link*. PC = PC + imm; rd = PC + 4."""
+        if imm % 4 != 0:
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
-        self.xregs[rd] = self.xregs[32] + 4
-        self.xregs[32] = self.xregs[32] + imm
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
+        self.xregs[rd] = self.pc + 4
+        self.pc += imm
 
     def jalr(self, rd, rs1, imm):
         """*Jump and Link Register*. PC = (x[rs1] + sext(imm[11:0])) & ~1; rd = PC + 4."""
+        if imm % 4 != 0:
+            raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
-        temp = self.xregs[32] + 4  # PC + 4
-        self.xregs[32] = (self.xregs[rs1] + imm) & ~1  # (x[rs1] + sext(imm[11:0])) & ~1
+        self.pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
+        temp = self.pc + 4  # PC + 4
+        self.pc = (self.xregs[rs1] + imm) & ~1  # (x[rs1] + sext(imm[11:0])) & ~1
         self.xregs[rd] = temp  # x[rd] = t
 
-    def sor(self, rd, rs1, rs2):
-        """Operação lógica OR.\n O nome sor foi escolhido para evitar conflito com a palavra reservada or."""
+    def or_(self, rd, rs1, rs2):
+        """Operação lógica OR.\n O nome foi escolhido para evitar conflito com a palavra reservada `or`."""
         self.xregs[rd] = self.xregs[rs1] | self.xregs[rs2]
 
 
     def lui(self, rd, imm):
-        """*Load Upper Immediate*. Carrega o imediato de 20 bits nos 12 bits mais significativos de rd."""
-        imm = imm << 12
-        self.xregs[rd] = imm
+        """*Load Upper Immediate*. Carrega o imediato de 20 bits nos 20 bits mais significativos de rd."""
+        if imm not in range(0x00000, 0xFFFFF):
+            raise ValueError(f"Imediato {hex(imm)} fora do intervalo 0x00000..0xFFFFF")
+        self.xregs[rd] = imm << 12
 
     def slt(self, rd, rs1, rs2):
         """*Set Less Than*. rd = (rs1 < rs2) ? 1 : 0"""
         # Conversão para signed int32. Necessário?
-        # rs1_val = np.int32(self.xregs[rs1])
-        # rs2_val = np.int32(self.xregs[rs2])
-        self.xregs[rd] = 1 if self.xregs[rs1] < self.xregs[rs2] else 0
+        rs1_val = np.int32(self.xregs[rs1])
+        rs2_val = np.int32(self.xregs[rs2])
+        self.xregs[rd] = np.uint32(1 if rs1_val < rs2_val else 0)
 
     def sltu(self, rd, rs1, rs2):
         """*Set Less Than Unsigned*. rd = (rs1 < rs2) ? 1 : 0"""
         # Conversão para unsigned int32. Necessário?
-        # rs1_val = np.uint32(self.xregs[rs1])
-        # rs2_val = np.uint32(self.xregs[rs2])
-        self.xregs[rd] = 1 if self.xregs[rs1] < self.xregs[rs2] else 0
+        rs1_val = np.uint32(self.xregs[rs1])
+        rs2_val = np.uint32(self.xregs[rs2])
+        self.xregs[rd] = np.uint32(1 if rs1_val < rs2_val else 0)
 
     def ori(self, rd, rs1, imm):
         """*OR Immediate*. rd = rs1 | imm"""
@@ -203,14 +223,14 @@ class InstructionSet:
 
         match syscall_num:
             case 1: # imprimir inteiro
-                print(a0)
+                print(int(a0), end="")
             case 4: # imprimir string
                 address = a0
                 string = ""
                 while self.memory.MEM[address] != 0:
                     string += chr(self.memory.MEM[address])
                     address += 1
-                print(string)
+                print(string, end="")
             case 10: # encerrar programa
                 print("Programa encerrado com sucesso.\n  Código de saída: 0")
                 exit(0)

@@ -3,21 +3,24 @@ Módulo de inicialização do processador com banco de registradores e definiç�
 """
 
 import numpy as np
-from memory import Memory
-from executor import Executor
+from core.memory import Memory
+from core.executor import Executor
 
 class ProgramCounterOverflowError(Exception):
     """Exceção lançada quando o Program Counter excede o limite do segmento de código."""
     pass
 
 class CPU(Executor):
-    def __init__(self, program_path):
-        xregs = np.zeros(32, dtype=np.uint32) # yeah
+    def __init__(self, code_path, data_path):
+        self.PC = np.uint32(0)
+        """Program Counter. Endereço da próxima instrução a ser executada."""
+        xregs = np.zeros(32, dtype=np.uint32)
         """Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
+
         memory = Memory()
         # Carregar os dados do programa na memória:
-        memory.load_mem(program_path)
-        super().__init__(xregs, memory) # Inicializa o Executor com o banco de registradores e a memória
+        memory.load_mem(code_path, data_path)
+        super().__init__(xregs, memory, self.PC) # Inicializa o Executor com o banco de registradores e a memória
 
     def run(self):
         """
@@ -25,8 +28,8 @@ class CPU(Executor):
         """
         while True:
             self.step()
-            if self.regs[32] >= 2048 * 4: # 2k words
-                raise ProgramCounterOverflowError("PC ultrapassou o limite do segmento de código.")
+            if self.PC >= 2048 * 4: # 2k words
+                raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
 
 
 """
@@ -37,17 +40,3 @@ instruções. Os registradores sp e gp fazem parte do banco de registradores, e
 armazenam os endereços das áreas de memória de pilha e dados globais,
 respectivamente
 """
-
-# Campos da instrução
-'''opcode = np.uint32(0)
-rs1 = np.uint32(0)
-rs2 = np.uint32(0)
-rd = np.uint32(0)
-shamt = np.uint32(0)
-funct3 = np.uint32(0)
-funct7 = np.uint32(0)
-imm12_i = np.uint32(0)
-imm12_s = np.uint32(0)
-imm13 = np.uint32(0)
-imm21 = np.uint32(0)
-imm20_u = np.uint32(0)'''

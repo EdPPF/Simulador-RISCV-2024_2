@@ -29,7 +29,8 @@ Syscall:
 
 ## Bibliotecas Externas Utilizadas
 
-Apenas `Numpy`!
+- `Numpy`;
+- `pytest` - verifique requirements.txt para a lista completa de dependências dessa biblioteca.
 
 # Como Rodar o Programa
 
@@ -50,6 +51,20 @@ Execute o simulador:
 
 ```bash
 python src/main.py
+```
+
+## Como Rodar Testes
+
+Para rodar os testes escritos por meio da biblioteca `pytest`, rode o comando abaixo a partir da raiz do repositório:
+
+```bash
+pytest src/tests/test_<arquivo.py> -vv -W ignore
+```
+
+`<arquivo.py>` se refere ao módulo de teste que quer testar. A flag `-vv` do pytest serve para dar mais detalhes dos resultados dos testes, enquanto a flag `-W ignore` serve para ignorar avisos. Como exemplo de comando, este serve para testar a classe `InstructionSet`:
+
+```bash
+pytest src/tests/test_instructions.py -vv
 ```
 
 # Estrutura do Repositório

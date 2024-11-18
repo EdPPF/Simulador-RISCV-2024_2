@@ -1,6 +1,14 @@
+"""
+Módulo de execução das instruções do RISC-V.\n
+É responsável por:
+- Buscar a instrução na memória;
+- Decodificar a instrução por meio do módulo `Decoder`;
+- Executar a instrução de acordo com o formato.
+"""
+
 # from collections import defaultdict # Para usar o dict dispatch pattern
-from instruction_set import InstructionSet
-from decoder import Decoder
+from core.instruction_set import InstructionSet
+from core.decoder import Decoder
 # from cpu import xregs
 
 
@@ -8,12 +16,13 @@ class Executor:
     """
     Função execute(): executa a instrução que foi lida pela função `fetch()` e decodificada por `Decoder.decode()`.
     """
-    def __init__(self, registers, memory) -> None:
+    def __init__(self, registers, memory, pc) -> None:
+        self.ins_flag = ''
         self.xregs = registers
         self.memory = memory
-        self.pc = 0 # 0x0?
+        self.pc = pc
         self.decoder = Decoder()
-        self.instruction_set = InstructionSet(self.xregs)
+        self.instruction_set = InstructionSet(self.xregs, self.pc, self.memory)
 
     def fetch(self) -> str:
         '''Lê a instrução da memória e incrementa o PC.'''
@@ -40,16 +49,22 @@ class Executor:
 
         match ic['ins_format']:
             case 'R_FORMAT':
+                self.ins_flag = 'R_FORMAT'
                 self.execute_r(ic)
             case 'I_FORMAT':
+                self.ins_flag = 'I_FORMAT'
                 self.execute_i(ic)
             case 'S_FORMAT':
+                self.ins_flag = 'S_FORMAT'
                 self.execute_s(ic)
             case 'B_FORMAT':
+                self.ins_flag = 'B_FORMAT'
                 self.execute_b(ic)
             case 'U_FORMAT':
+                self.ins_flag = 'U_FORMAT'
                 self.execute_u(ic)
             case 'J_FORMAT':
+                self.ins_flag = 'J_FORMAT'
                 self.execute_j(ic)
             case _:
                 raise ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}")
@@ -95,9 +110,9 @@ class Executor:
                     case 0x04: # 101 SRL
                         raise NotImplementedError("Instrução SRL não implementada neste projeto!")
                     case 0x06: # 110 OR
-                        self.instruction_set.sor(rd, rs1, rs2)
+                        self.instruction_set.or_(rd, rs1, rs2)
                     case 0x07: # 111 AND
-                        self.instruction_set.sand(rd, rs1, rs2)
+                        self.instruction_set.and_(rd, rs1, rs2)
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
             case 0x20: # 0100000
@@ -110,11 +125,11 @@ class Executor:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_i(self, ic):
+        # The immediate opcode OP-IMM==7'b001_0011. When opcode==OP-IMM==7'b001_0011,
+        # it proves that the instruction is an I-type instruction, and the specific behavior of this instruction is determined by the value of funct3.
         """
         Executa instruções do formato I - Registrador para Registrador com Imediato\n
         O campo `funct3` seleciona o tipo da operação.\n
-        The immediate opcode OP-IMM==7'b001_0011. When opcode==OP-IMM==7'b001_0011,
-        it proves that the instruction is an I-type instruction, and the specific behavior of this instruction is determined by the value of funct3.
         ```
         imm[11:0]         rs1 funct3        rd   opcode
         12                5   3             5    7
