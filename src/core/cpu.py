@@ -40,17 +40,3 @@ instruções. Os registradores sp e gp fazem parte do banco de registradores, e
 armazenam os endereços das áreas de memória de pilha e dados globais,
 respectivamente
 """
-
-# Campos da instrução
-'''opcode = np.uint32(0)
-rs1 = np.uint32(0)
-rs2 = np.uint32(0)
-rd = np.uint32(0)
-shamt = np.uint32(0)
-funct3 = np.uint32(0)
-funct7 = np.uint32(0)
-imm12_i = np.uint32(0)
-imm12_s = np.uint32(0)
-imm13 = np.uint32(0)
-imm21 = np.uint32(0)
-imm20_u = np.uint32(0)'''
