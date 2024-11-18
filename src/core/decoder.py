@@ -45,7 +45,7 @@ class Decoder:
             ins_format = 'R_FORMAT'
             return {
                 'opcode': opcode,
-                'func7': funct7,
+                'funct7': funct7,
                 'rs2': rs2,
                 'rs1': rs1,
                 'funct3': funct3,
@@ -57,6 +57,7 @@ class Decoder:
             imm12_i = np.int32(instruction) >> 20
             return {
                 'opcode': opcode,
+                'funct7': funct7,
                 'imm12_i': imm12_i,
                 'rs1': rs1,
                 'funct3': funct3,
@@ -101,6 +102,7 @@ class Decoder:
             return {
                 'opcode': opcode,
                 'imm21': imm21,
+                'rs1': rs1,
                 'rd': rd,
                 'ins_format': ins_format,
             }

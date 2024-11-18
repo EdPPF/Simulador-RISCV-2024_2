@@ -12,7 +12,7 @@ class TestDecoder:
         decoded = self.dec.decode(instr)
         assert decoded == {
             'opcode': 0b0110011,
-            'func7': 0,
+            'funct7': 0,
             'rs2': 0b00111,
             'rs1': 0b00110,
             'funct3': 0b000,
@@ -26,6 +26,7 @@ class TestDecoder:
         decoded = self.dec.decode(instr)
         assert decoded == {
             'opcode': 0b0010011,
+            'funct7': 0,
             'imm12_i': 0b000000000110,
             'rs1': 0b00110,
             'funct3': 0b100,
