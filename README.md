@@ -58,10 +58,10 @@ python src/main.py
 Para rodar os testes escritos por meio da biblioteca `pytest`, rode o comando abaixo a partir da raiz do repositório:
 
 ```bash
-pytest src/tests/test_<arquivo.py> -vv
+pytest src/tests/test_<arquivo.py> -vv -W ignore
 ```
 
-`<arquivo.py>` se refere ao módulo de teste que quer testar. A flag `-vv` do pytest serve para dar mais detalhes dos resultados dos testes. Como exemplo de comando, este serve para testar a classe `InstructionSet`:
+`<arquivo.py>` se refere ao módulo de teste que quer testar. A flag `-vv` do pytest serve para dar mais detalhes dos resultados dos testes, enquanto a flag `-W ignore` serve para ignorar avisos. Como exemplo de comando, este serve para testar a classe `InstructionSet`:
 
 ```bash
 pytest src/tests/test_instructions.py -vv
