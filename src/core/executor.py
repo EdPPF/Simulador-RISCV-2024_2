@@ -9,7 +9,7 @@ Módulo de execução das instruções do RISC-V.\n
 # from collections import defaultdict # Para usar o dict dispatch pattern
 from core.instruction_set import InstructionSet
 from core.decoder import Decoder
-# from cpu import xregs
+import numpy as np
 
 
 class Executor:
@@ -26,7 +26,7 @@ class Executor:
 
     def fetch(self) -> str:
         '''Lê a instrução da memória e incrementa o PC.'''
-        instruction: str = self.memory.lw(self.pc, 0) # 0 porque a área de .text do RARS começa em 0 na memória
+        instruction = self.memory.lw(self.pc, 0) # 0 porque a área de .text do RARS começa em 0 na memória
         self.pc += 4
         return instruction
 
@@ -72,7 +72,7 @@ class Executor:
     def step(self):
         '''Executa um ciclo de instrução'''
         instruction = self.fetch()            # Lê a instrução da memória
-        ic = self.decoder.decode(instruction) # Retorna os campos da instrução e seu formato
+        ic = self.decoder.decode(np.uint32(int(instruction)))#, 16))) # Retorna os campos da instrução e seu formato
         self.execute(ic)                      # Executa a instrução
 
     def execute_r(self, ic):
@@ -151,7 +151,7 @@ class Executor:
         ECALL   0   PRIV   0  SYSTEM
         ```
         """
-        rs1 = self.xregs[ic['rs1']]
+        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
         rd = ic['rd']
         imm = ic['imm12_i']
         funct3 = ic['funct3']

@@ -15,11 +15,6 @@ Syscall:
 - encerrar programa
 """
 
-"""
-! Diferente de outro projeto, onde os parâmetros das instruções são `i32`, e o banco de regs é passado
-! apenas na chamada da instrução, aqui estou acessando o banco diretamente nas funções de instrução.
-"""
-
 import numpy as np
 class InstructionSet:
     """Conjunto de instruções RV32I."""
@@ -226,13 +221,16 @@ class InstructionSet:
                 print(int(a0), end="")
             case 4: # imprimir string
                 address = a0
+                # Ajusta o endereço relativo com base no segmento de dados
+                if address < self.memory.data_base:
+                    address += self.memory.data_base - 2
                 string = ""
                 while self.memory.MEM[address] != 0:
                     string += chr(self.memory.MEM[address])
                     address += 1
                 print(string, end="")
             case 10: # encerrar programa
-                print("Programa encerrado com sucesso.\n  Código de saída: 0")
+                print("Programa encerrado com sucesso.\nCódigo de saída: 0")
                 exit(0)
             case _:
                 raise ValueError(f"Syscall não reconhecida: {syscall_num}")

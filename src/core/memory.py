@@ -14,6 +14,8 @@ class Memory:
     '''
     def __init__(self) -> None:
         self.MEM = np.zeros(16384, dtype=np.uint8)
+        self.text_base = 0x0000  # Endereço base do segmento .text
+        self.data_base = 0x2000  # Endereço base do segmento .data
 
     def lb(self, reg: int, kte: int):
         '''Lê um byte da memória e o converte para um inteiro de 32 bits estendendo o sinal do byte. Retorna o inteiro de 32 bits.'''
@@ -23,12 +25,12 @@ class Memory:
         if byte & 0x80:  # Se o bit de sinal (bit 7) estiver definido
             # Extensão de sinal: converte para negativo em complemento de dois
             byte -= 256
-        return hex(byte & 0xffffffff)
+        return (byte & 0xffffffff)
 
     def lbu(self, reg: int, kte: int) -> str:
         '''Lê um byte da memória e o converte para um inteiro de 32 bits sem sinal (valor positivo). Retorna o inteiro de 32 bits.'''
         address = reg + kte
-        return hex(np.uint32(self.MEM[address]))
+        return (np.uint32(self.MEM[address]))
 
     def lw(self, reg: int, kte: int):
         '''Lê uma palavra de 32 bits da memória e retorna o seu valor.'''
@@ -41,7 +43,7 @@ class Memory:
         byte2 = np.uint32(self.MEM[address+2])
         byte3 = np.uint32(self.MEM[address+3])
         word = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0
-        return hex(word)
+        return (word)
 
     def sb(self, reg: int, kte: int, byte):
         '''Escreve o byte passado como parâmetro na memória.'''
@@ -81,7 +83,7 @@ class Memory:
     def load_mem(self, code_path, data_path):
         """
         Carrega o conteúdo de um arquivo montado pelo RARS para a memória.\n
-        Dos arquivos montados pelo RARS, o segmento .text está no intervalo [0x00000000; 0x00000054].\n
+        Dos arquivos montados pelo RARS, o segmento .text está no intervalo [0x00000000; 0x00001fff].\n
         O segmento .data está em [0x00002000; 0x00002ffc].\n
         Os arquivos lidos estão salvos em binário (strings) como `code.txt` e `data.txt`.
         """
@@ -89,8 +91,8 @@ class Memory:
         with open(code_path, 'r') as f:
             address = 0x0
             for line in f:
-                if address > 0x54:
-                    raise ValueError("Endereço de código excedeu o limite de 0x54.")
+                if address > 0x1fff:
+                    raise ValueError("Endereço de código excedeu o limite de 0x1fff.")
                 instruction = int(line.strip(), 2)
                 self._store(address, instruction)
                 address += 4
