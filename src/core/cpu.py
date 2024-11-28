@@ -26,10 +26,17 @@ class CPU(Executor):
         """
         Executa o programa até encontrar uma chamada de sistema para encerramento, ou até o pc ultrapassar o limite do segmento de código (2k words).
         """
-        while True:
-            self.step()
-            if self.PC >= 2048 * 4: # 2k words
-                raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
+        try:
+            while True:
+                self.step()
+                # if self.PC >= 2048 * 4: # 2k words
+                #     raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
+        except ProgramCounterOverflowError as e:
+            print(e)
+        except SystemExit as e:
+            print(f"System Exit: {e}")
+        except Exception as e:
+            print(f"Erro inesperado: {e}")
 
 
 """
