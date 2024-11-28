@@ -6,25 +6,30 @@ class MemoryMock:
     """Mock para a memória."""
     def __init__(self) -> None:
         self.MEM = np.zeros(16384, dtype=np.uint8)
+        self.text_base = 0x0000  # Endereço base do segmento .text
+        self.data_base = 0x2000  # Endereço base do segmento .data
 
-    def lw(self, reg, kte):
-        address = reg + kte
+    def lw(self, address):#rd: int, kte: int):
+        '''Lê uma palavra de 32 bits da memória e retorna o seu valor.'''
+        # address = rd + kte
+        if address != 0x2000 and address % 4 != 0:
+            raise ValueError(f"Endereço {hex(address)} não retorna um múltiplo de 4.")
+
         byte0 = np.uint32(self.MEM[address+0])
         byte1 = np.uint32(self.MEM[address+1])
         byte2 = np.uint32(self.MEM[address+2])
         byte3 = np.uint32(self.MEM[address+3])
         word = (byte3 << 24) | (byte2 << 16) | (byte1 << 8) | byte0
-        # word = f"0x{word:08X}"
-        return hex(word)
+        return (word)
 
-    def sw(self, reg, kte, word):
+    def sw(self, address, word):
         pass
 
 
 class DecoderMock:
     """Mock para o decodificador."""
     def decode(self, instruction):
-        if instruction == "0x330573":
+        if instruction == 0x730533:
             return {
                 'opcode': 0b0110011,
                 'funct7': 0,
@@ -34,7 +39,7 @@ class DecoderMock:
                 'rd': 0b01010,
                 'ins_format': 'R_FORMAT',
             }
-        elif instruction == "0x636513":
+        elif instruction == 0x636513:
             return {
                 'opcode': 0b0010011,
                 'funct7': 0,
@@ -44,7 +49,7 @@ class DecoderMock:
                 'rd': 0b01010,
                 'ins_format': 'I_FORMAT',
             }
-        elif instruction == "0x752123":
+        elif instruction == 0x752123:
             return {
                 'opcode': 0b0100011,
                 'imm12_s': 0b000000000010,
@@ -53,7 +58,7 @@ class DecoderMock:
                 'funct3': 0b010,
                 'ins_format': 'S_FORMAT',
             }
-        elif instruction == "0xd60263":
+        elif instruction == 0xd60263:
             return {
                 'opcode': 0b1100011,
                 'imm13': 0b0000000000100,
@@ -62,14 +67,14 @@ class DecoderMock:
                 'funct3': 0b000,
                 'ins_format': 'B_FORMAT',
             }
-        elif instruction == "0xffffe597":
+        elif instruction == 0xffffe597:
             return {
                 'opcode': 0b0010111,
                 'imm20_u': 0b11111111111111111110,
                 'rd': 0b01011,
                 'ins_format': 'U_FORMAT',
             }
-        elif instruction == "0x18005ef":
+        elif instruction == 0x18005ef:
             return {
                 'opcode': 0b1101111,
                 'imm21': 0b00000000000000011000,
@@ -177,15 +182,11 @@ class ExecutorMock:
         pass
 
 class TestCPU():
-    code_path = "src/tests/files/code.txt"
-    data_path = "src/tests/files/data.txt"
+    code_path = "src/tests/files/test4-1_text.txt"
+    data_path = "src/tests/files/test4-1_data.txt"
     CPU = CPU(code_path, data_path)
 
     def test_init(self):
         assert self.CPU.PC == np.uint32(0)
         assert self.CPU.xregs.all() == np.zeros(32, dtype=np.uint32).all()
         assert self.CPU.memory.MEM.all() == np.zeros(16384, dtype=np.uint8).all()
-
-    def test_run(self):
-        with pytest.raises(Exception):
-            self.CPU.run()

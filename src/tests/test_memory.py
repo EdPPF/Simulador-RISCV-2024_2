@@ -11,39 +11,39 @@ class TestMemory:
 
     def test_sb(self):
         mem = Memory()
-        mem.sb(0, 0, 0b11111010) # 0xFA
-        mem.sb(0, 4, 0b11001010) # 0xCA
+        mem.sb(0+0, 0b11111010) # 0xFA
+        mem.sb(0+4, 0b11001010) # 0xCA
         assert mem.MEM[0] == 0xFA
         assert mem.MEM[4] == 0xCA
 
     def test_sw(self):
         mem = Memory()
-        mem.sw(0, 0, 0b11111010110010101100101011111110) # 0xFACACAFE
+        mem.sw(0+0, 0b11111010110010101100101011111110) # 0xFACACAFE
         assert mem.MEM[0] == 0xFE
         assert mem.MEM[1] == 0xCA
         assert mem.MEM[2] == 0xCA
         assert mem.MEM[3] == 0xFA
         # Endereço inválido:
         with pytest.raises(ValueError):
-            mem.sw(1, 0, 0b11111010110010101100101011111110)
+            mem.sw(1+0, 0b11111010110010101100101011111110)
 
     def test_lb(self):
         mem = Memory()
-        mem.sb(0, 0, 0b11101101) # 0xED
-        assert mem.lb(0, 0) == '0xffffffed'
+        mem.sb(0+0, 0b11101101) # 0xED
+        assert mem.lb(0+0) == 0xffffffed
 
     def test_lbu(self):
         mem = Memory()
-        mem.sb(0, 0, 0b11101101)
-        assert mem.lbu(0, 0) == '0xed'
+        mem.sb(0+0, 0b11101101)
+        assert mem.lbu(0+0) == 0xed
 
     def test_lw(self):
         mem = Memory()
-        mem.sw(0, 0, 0b11011110111111101100101011011010) # 0xDEFECADA
-        assert mem.lw(0, 0) == '0xdefecada'
+        mem.sw(0+0, 0b11011110111111101100101011011010) # 0xDEFECADA
+        assert mem.lw(0+0) == 0xdefecada
         # Endereço inválido:
         with pytest.raises(ValueError):
-            mem.lw(1, 0)
+            mem.lw(1+0)
 
     def test_load_mem(self):
         # Valores de memória gerados pelo montador RARS para o programa específico sendo testado:
