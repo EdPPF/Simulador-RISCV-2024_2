@@ -87,6 +87,8 @@ pytest src/tests/test_<arquivo.py> -vv -W ignore
 pytest src/tests/test_instructions.py -vv
 ```
 
+Além dos testes de `pytest`, ou seja, todos os arquivos do tipo `test_*.py`, o arquivo `tests/test_completo.py` pode ser executado para verificar testes diversos das instruções sem utilizar alguma biblioteca específica para isso. Ele possui várias instâncias de `CPU` e as executa em diferentes threads por meio da bilbioteca padrão `multiprocessing`. Os resultados são impressos no terminal.
+
 # Estrutura do Repositório
 
 ```bash

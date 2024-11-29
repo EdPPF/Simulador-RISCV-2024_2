@@ -19,7 +19,6 @@ class Memory:
 
     def lb(self, address):
         '''Lê um byte da memória e o converte para um inteiro de 32 bits estendendo o sinal do byte. Retorna o inteiro de 32 bits.'''
-        # address = reg + kte
         byte = int(self.MEM[address])
         # Verifica se o byte deve ser tratado como negativo
         if byte & 0x80:  # Se o bit de sinal (bit 7) estiver definido
@@ -29,12 +28,10 @@ class Memory:
 
     def lbu(self, address):
         '''Lê um byte da memória e o converte para um inteiro de 32 bits sem sinal (valor positivo). Retorna o inteiro de 32 bits.'''
-        # address = reg + kte
         return (np.uint32(self.MEM[address]))
 
     def lw(self, address):#rd: int, kte: int):
         '''Lê uma palavra de 32 bits da memória e retorna o seu valor.'''
-        # address = rd + kte
         if address != 0x2000 and address % 4 != 0:
             raise ValueError(f"Endereço {hex(address)} não retorna um múltiplo de 4.")
 
@@ -47,7 +44,6 @@ class Memory:
 
     def sb(self, address, byte):
         '''Escreve o byte passado como parâmetro na memória.'''
-        # np.put(self.MEM, address, byte)
         self.MEM[address] = byte & 0xff # Apenas os 8 bits menos significativos
 
     def sw(self, address, word):

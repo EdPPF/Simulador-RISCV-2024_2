@@ -6,7 +6,6 @@ Módulo de execução das instruções do RISC-V.\n
 - Executar a instrução de acordo com o formato.
 """
 
-# from collections import defaultdict # Para usar o dict dispatch pattern
 from core.instruction_set import InstructionSet
 from core.decoder import Decoder
 import numpy as np
@@ -22,11 +21,10 @@ class Executor:
         self.memory = memory
         self.pc = pc
         self.decoder = Decoder()
-        self.instruction_set = InstructionSet(self.xregs, self.memory) #self.pc, self.memory)
+        self.instruction_set = InstructionSet(self.xregs, self.memory)
 
     def fetch(self):
         '''Lê a instrução da memória e incrementa o PC.'''
-        # self.instruction_set.pc = self.pc           # Atualiza o PC no InstructionSet
         instruction = self.memory.lw((self.pc + 0)) # 0 porque a área de .text do RARS começa em 0 na memória
         self.pc += 4
         return instruction
@@ -60,16 +58,10 @@ class Executor:
 
     def step(self):
         '''Executa um ciclo de instrução'''
-        instruction = self.fetch()            # Lê a instrução da memória
-        # print(f"{' '*4}Instruction: {bin(instruction)}")
-        ic = self.decoder.decode(np.uint32(int(instruction)))#, 16))) # Retorna os campos da instrução e seu formato
-        # print(f"{' '*4}Decoded: {ic}")
-        # self.instruction_set.pc = self.pc     # Atualiza o PC no InstructionSet
-        # print(f"Ins Format: {ic['ins_format']}")
-        self.execute(ic)                      # Executa a instrução
+        instruction = self.fetch()                            # Lê a instrução da memória
+        ic = self.decoder.decode(np.uint32(int(instruction))) # Retorna os campos da instrução e seu formato
+        self.execute(ic)                                      # Executa a instrução
         self.global_counter += 1
-        # self.pc = self.instruction_set.pc     # Atualiza o PC no Executor
-        # print(f"*\nPC: {hex(self.pc - 4)}\n")
 
     def execute_r(self, ic):
         """
@@ -85,8 +77,8 @@ class Executor:
         0100000 src2 src1 SUB/SRA      dest OP     SRA não implementada!
         ```
         """
-        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
-        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
+        rs1 = ic['rs1']
+        rs2 = ic['rs2']
         rd = ic['rd']
         funct3 = ic['funct3']
         funct7 = ic['funct7']
@@ -154,7 +146,7 @@ class Executor:
         ECALL   0   PRIV   0  SYSTEM
         ```
         """
-        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
+        rs1 = ic['rs1']
         rd = ic['rd']
         imm = ic['imm12_i']
         funct3 = ic['funct3']
@@ -242,8 +234,8 @@ class Executor:
         offset[11:5] src base width  offset[4:0] STORE
         ```
         """
-        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
-        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
+        rs1 = ic['rs1']
+        rs2 = ic['rs2']
         imm = ic['imm12_s']
         funct3 = ic['funct3']
         match funct3:
@@ -266,8 +258,8 @@ class Executor:
         1       6         5    5   3      4        1       7
         ```
         """
-        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
-        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
+        rs1 = ic['rs1']
+        rs2 = ic['rs2']
         imm = ic['imm13']
         funct3 = ic['funct3']
         match funct3:
@@ -328,10 +320,6 @@ class Executor:
         match opcode:
             case 0x6F: # 1101111 JAL
                 # print("Executando JAL...")
-                # print(f"IMM > {hex(imm)}: {type(imm)}")
                 self.pc = self.instruction_set.jal(rd, imm, self.pc)
-            # case 0x67: # 1100111 JALR
-            # #     print("Executando JALR...")
-            #     self.pc = self.instruction_set.jalr(rd, rs1, imm, self.pc)
             case _:
                 raise ValueError(f"opcode não reconhecido: {opcode}")

@@ -21,8 +21,6 @@ class InstructionSet:
     def __init__(self, regs, memory): #pc, memory) -> None:
         self.xregs = regs
         """Banco de registradores. Definido em `cpu.py` como uma lista de inteiros de 32 bits sem sinal."""
-        # self.pc = pc
-        # """Program Counter. Definido em `cpu.py` como um inteiro de 32 bits sem sinal."""
         self.memory = memory
         """Memória do sistema. Definida em `memory.py` como um array de inteiros de 8 bits sem sinal."""
 
@@ -51,13 +49,12 @@ class InstructionSet:
         self._write_reg(
             rd,
             self.memory.lb(address)
-        ) # self.xregs[rd] = self.memory.lb(address)
+        )
 
     def lbu(self, rd, rs1, imm):
         """*Load Byte Unsigned*. Carrega um inteiro de 32 bits sem sinal da memória."""
         imm = self._gera_imm(imm)
         address = self.xregs[rs1] + imm
-        # self.xregs[rd] = self.memory.lbu(address)
         self._write_reg(
             rd,
             self.memory.lbu(address)
@@ -69,7 +66,6 @@ class InstructionSet:
         address = self.xregs[rs1] + imm
         if address < 0x2000:
             address += 0x2000 - 2 # 0x2000 é o endereço base do segmento .data
-        # self.xregs[rd] = self.memory.lw(address)
         self._write_reg(
             rd,
             self.memory.lw(address)
@@ -90,7 +86,6 @@ class InstructionSet:
 
     def add(self, rd, rs1, rs2):
         """Adição de inteiros de 32 bits."""
-        # self.xregs[rd] = self.xregs[rs1] + self.xregs[rs2]
         self._write_reg(
             rd,
             self.xregs[rs1] + self.xregs[rs2]
@@ -99,8 +94,6 @@ class InstructionSet:
     def addi(self, rd, rs1, imm):
         """*Add Immediate*. Adição de um inteiro de 32 bits com um imediato de 12 bits."""
         imm = self._gera_imm(imm)
-        # print(f"rs1: {self.xregs[rs1]} || imm: {imm} || rs1 + imm: {self.xregs[rs1] + imm}")
-        # self.xregs[rd] = self.xregs[rs1] + imm
         self._write_reg(
             rd,
             self.xregs[rs1] + imm
@@ -108,7 +101,6 @@ class InstructionSet:
 
     def and_(self, rd, rs1, rs2):
         """Operação lógica AND.\n O nome foi escolhido para evitar conflito com a palavra reservada `and`."""
-        # self.xregs[rd] = self.xregs[rs1] & self.xregs[rs2]
         self._write_reg(
             rd,
             self.xregs[rs1] & self.xregs[rs2]
@@ -117,7 +109,6 @@ class InstructionSet:
     def andi(self, rd, rs1, imm):
         """*AND Immediate*. Operação lógica AND com um imediato de 12 bits."""
         imm = self._gera_imm(imm)
-        # self.xregs[rd] = self.xregs[rs1] & imm
         self._write_reg(
             rd,
             self.xregs[rs1] & imm
@@ -125,11 +116,9 @@ class InstructionSet:
 
     def auipc(self, rd, imm, pc):
         """*Add Upper Immediate*. Adiciona o imediato de 20 bits ao PC e armazena o resultado em rd."""
-        # imm = imm << 12
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         imm = self._gera_imm(imm)
         imm = imm << 12
-        # self.xregs[rd] = pc + imm
         self._write_reg(
             rd,
             pc + imm
@@ -168,7 +157,7 @@ class InstructionSet:
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
         rs1_val = self._to_signed32(self.xregs[rs1])
         rs2_val = self._to_signed32(self.xregs[rs2])
-        if rs1_val >= rs2_val: # if self.xregs[rs1] >= self.xregs[rs2]:
+        if rs1_val >= rs2_val:
             pc += imm
         else:
             pc += 4
@@ -180,9 +169,6 @@ class InstructionSet:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
-        # Conversão para unsigned int32. Necessário?
-        # rs1_val = np.uint32(self.xregs[rs1])
-        # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] >= self.xregs[rs2]:
             pc += imm
         else:
@@ -195,9 +181,6 @@ class InstructionSet:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
-        # Conversão para signed int32. Necessário?
-        # rs1_val = np.int32(self.xregs[rs1])
-        # rs2_val = np.int32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
             pc += imm
         else:
@@ -210,9 +193,6 @@ class InstructionSet:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
-        # Conversão para unsigned int32. Necessário?
-        # rs1_val = np.uint32(self.xregs[rs1])
-        # rs2_val = np.uint32(self.xregs[rs2])
         if self.xregs[rs1] < self.xregs[rs2]:
             pc += imm
         else:
@@ -224,7 +204,7 @@ class InstructionSet:
         if imm % 4 != 0:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
-        pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
+        pc -= 4                     # Retirando o +4 que o fetch() faz prematuramente
         self._write_reg(rd, pc + 4) # self.xregs[rd] = pc + 4
         pc += imm
         return pc
@@ -234,16 +214,14 @@ class InstructionSet:
         if imm % 4 != 0:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
-        pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
+        pc -= 4                            # Retirando o +4 que o fetch() faz prematuramente
         temp = pc + 4  # PC + 4
         pc = (self.xregs[rs1] + imm) & ~1  # (x[rs1] + sext(imm[11:0])) & ~1
-        # self.xregs[rd] = temp  # x[rd] = t
         self._write_reg(rd, temp)
         return pc
 
     def or_(self, rd, rs1, rs2):
         """Operação lógica OR.\n O nome foi escolhido para evitar conflito com a palavra reservada `or`."""
-        # self.xregs[rd] = self.xregs[rs1] | self.xregs[rs2]
         self._write_reg(
             rd,
             self.xregs[rs1] | self.xregs[rs2]
@@ -254,7 +232,6 @@ class InstructionSet:
         """*Load Upper Immediate*. Carrega o imediato de 20 bits nos 20 bits mais significativos de rd."""
         if imm not in range(0x00000, 0xfffff + 1):
             raise ValueError(f"Imediato {hex(imm)} fora do intervalo 0x00000..0xFFFFF")
-        # self.xregs[rd] = imm << 12
         self._write_reg(
             rd,
             imm << 12
@@ -262,10 +239,8 @@ class InstructionSet:
 
     def slt(self, rd, rs1, rs2):
         """*Set Less Than*. rd = (rs1 < rs2) ? 1 : 0"""
-        # Conversão para signed int32. Necessário?
         rs1_val = np.int32(self.xregs[rs1])
         rs2_val = np.int32(self.xregs[rs2])
-        # self.xregs[rd] = np.uint32(1 if rs1_val < rs2_val else 0)
         self._write_reg(
             rd,
             np.uint32(1 if rs1_val < rs2_val else 0)
@@ -273,10 +248,8 @@ class InstructionSet:
 
     def sltu(self, rd, rs1, rs2):
         """*Set Less Than Unsigned*. rd = (rs1 < rs2) ? 1 : 0"""
-        # Conversão para unsigned int32. Necessário?
         rs1_val = np.uint32(self.xregs[rs1])
         rs2_val = np.uint32(self.xregs[rs2])
-        # self.xregs[rd] = np.uint32(1 if rs1_val < rs2_val else 0)
         self._write_reg(
             rd,
             np.uint32(1 if rs1_val < rs2_val else 0)
@@ -285,7 +258,6 @@ class InstructionSet:
     def ori(self, rd, rs1, imm):
         """*OR Immediate*. rd = rs1 | imm"""
         imm = self._gera_imm(imm)
-        # self.xregs[rd] = self.xregs[rs1] | imm
         self._write_reg(
             rd,
             self.xregs[rs1] | imm
@@ -294,7 +266,6 @@ class InstructionSet:
     def slli(self, rd, rs1, imm):
         """*Shift Left Logical Immediate*. rd = rs1 << shamt"""
         shamt = imm & 0x1F
-        # self.xregs[rd] = self.xregs[rs1] << shamt
         self._write_reg(
             rd,
             self.xregs[rs1] << shamt
@@ -303,7 +274,6 @@ class InstructionSet:
     def srai(self, rd, rs1, imm):
         """*Shift Right Arithmetic Immediate*. rd = rs1 >> shamt"""
         shamt = imm & 0x1F
-        # self.xregs[rd] = np.int32(self.xregs[rs1]) >> shamt
         self._write_reg(
             rd,
             np.int32(self.xregs[rs1]) >> shamt
@@ -312,7 +282,6 @@ class InstructionSet:
     def srli(self, rd, rs1, imm):
         """*Shift Right Logical Immediate*. rd = rs1 >> shamt"""
         shamt = imm & 0x1F
-        # self.xregs[rd] = self.xregs[rs1] >> shamt
         self._write_reg(
             rd,
             self.xregs[rs1] >> shamt
@@ -320,7 +289,6 @@ class InstructionSet:
 
     def sub(self, rd, rs1, rs2):
         """Subtração de inteiros de 32 bits."""
-        # self.xregs[rd] = self.xregs[rs1] - self.xregs[rs2]
         self._write_reg(
             rd,
             self.xregs[rs1] - self.xregs[rs2]
@@ -328,7 +296,6 @@ class InstructionSet:
 
     def xor(self, rd, rs1, rs2):
         """Operação lógica XOR."""
-        # self.xregs[rd] = self.xregs[rs1] ^ self.xregs[rs2]
         self._write_reg(
             rd,
             self.xregs[rs1] ^ self.xregs[rs2]
@@ -357,7 +324,6 @@ class InstructionSet:
                 print(string, end="")
             case 10: # encerrar programa
                 print("\nPrograma encerrado com sucesso.")
-                # print("\nCódigo de saída: 0")
                 exit(0)
             case _:
                 raise ValueError(f"Syscall não reconhecida: {syscall_num}")
