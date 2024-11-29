@@ -110,10 +110,15 @@ code_path63 = 'src/tests/files/test6-3_text.txt'
 data_path63 = 'src/tests/files/test6-3_data.txt'
 cpu63 = CPU(code_path63, data_path63)
 
+# Testa BLT e BLTU
+code_path64 = 'src/tests/files/test6-4_text.txt'
+data_path64 = 'src/tests/files/test6-4_data.txt'
+cpu64 = CPU(code_path64, data_path64)
+
 def main(cpui=None):
     try:
-        cpui.run()
-        # cpu.run()     # UltraT
+        # cpui.run()
+        cpu.run()     # UltraT
         # cpu41.run()
         # cpu42.run()
         # cpu43.run()
@@ -135,6 +140,7 @@ def main(cpui=None):
         # cpu61.run()
         # cpu62.run()
         # cpu63.run()
+        # cpu64.run()
     except ProgramCounterOverflowError as e:
         print(f"Pirijonga -> {e}")
     except SystemExit as e:
@@ -142,9 +148,10 @@ def main(cpui=None):
 
 if __name__ == "__main__":
     cpu_instances = [
-        cpu41, cpu42, cpu43, cpu44, cpu45, cpu46, cpu47, cpu48, cpu49,
-        cpu51, cpu52, cpu53, cpu54, cpu55, cpu56, cpu57, cpu58, cpu59,
-        cpu61, cpu62, cpu63,
+        cpu
+        # cpu41, cpu42, cpu43, cpu44, cpu45, cpu46, cpu47, cpu48, cpu49,
+        # cpu51, cpu52, cpu53, cpu54, cpu55, cpu56, cpu57, cpu58, cpu59,
+        # cpu61, cpu62, cpu63, cpu64
     ]
     processes = []
 

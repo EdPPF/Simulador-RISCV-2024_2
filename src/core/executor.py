@@ -272,8 +272,6 @@ class Executor:
             case 0x04: # 100 BLT
                 # print(f"Executando BLT...")
                 self.pc = self.instruction_set.blt(rs1, rs2, imm, self.pc)
-                print(f"Saindo da exxecução de BLT. PC = {self.pc}")
-                exit(-1)
             case 0x05: # 101 BGE
                 # print(f"Executando BGE...")
                 self.pc = self.instruction_set.bge(rs1, rs2, imm, self.pc)

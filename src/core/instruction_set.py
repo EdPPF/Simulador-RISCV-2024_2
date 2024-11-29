@@ -181,7 +181,9 @@ class InstructionSet:
             raise ValueError(f"Endereço de destino {hex(imm)} não está alinhado em 4 bytes.")
         imm = self._gera_imm(imm)
         pc -= 4 # Retirando o +4 que o fetch() faz prematuramente
-        if self.xregs[rs1] < self.xregs[rs2]:
+        rs1_val = self._to_signed32(self.xregs[rs1])
+        rs2_val = self._to_signed32(self.xregs[rs2])
+        if rs1_val < rs2_val:
             pc += imm
         else:
             pc += 4
