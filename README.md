@@ -47,6 +47,18 @@ Instale as dependências necessárias:
 pip install -r requirements.txt
 ```
 
+Coloque arquivos de texto com as instruções (podem estar em binário, como nos arquivos de teste deste repositório) em algum lugar do repositório - um para a área de código (`.text` do RISCV) e outra para dados (`.data`).
+
+Em `main.py`, carrege os arquivos na instância de CPU:
+
+```python
+# src/main.py
+def main():
+    code_path = 'caminho/para/seu/arquivo/text.txt'
+    data_path = 'caminho/para/seu/arquivo/data.txt'
+    cpu = CPU(code_path, data_path)
+```
+
 Execute o simulador:
 
 ```bash
