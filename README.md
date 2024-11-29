@@ -55,13 +55,21 @@ python src/main.py
 
 ## Como Rodar Testes
 
-Para rodar os testes escritos por meio da biblioteca `pytest`, rode o comando abaixo a partir da raiz do repositório:
+Para rodar todos os testes escritos com a biblioteca `pytest`, rode o comando abaixo a partir da raiz do repositório:
+
+```bash
+pytest src/tests -vv -W ignore
+```
+
+A flag `-vv` do pytest serve para dar mais detalhes dos resultados dos testes, enquanto a flag `-W ignore` serve para ignorar avisos.
+
+Para rodar algum arquivo de teste específico, basta adicionar o caminho até ele no comando acima:
 
 ```bash
 pytest src/tests/test_<arquivo.py> -vv -W ignore
 ```
 
-`<arquivo.py>` se refere ao módulo de teste que quer testar. A flag `-vv` do pytest serve para dar mais detalhes dos resultados dos testes, enquanto a flag `-W ignore` serve para ignorar avisos. Como exemplo de comando, este serve para testar a classe `InstructionSet`:
+`<arquivo.py>` se refere ao módulo de teste que quer testar. Como exemplo de comando, este serve para testar a classe `InstructionSet`:
 
 ```bash
 pytest src/tests/test_instructions.py -vv
@@ -79,14 +87,16 @@ rv32i-simulator/
 │   │   ├── executor.py        # Função execute() para executar instruções
 │   │   ├── instruction_set.py # Conjunto de instruções RV32I
 │   │   └── memory.py          # Implementação da memória (load/store)
-│   ├── tests/                 # Utilitários e funções auxiliares
+│   ├── tests/                 # Testes
+│   │   ├── files/
 │   │   ├── __init__.py
 │   │   ├── test_cpu.py
 │   │   ├── test_decoder.py
 │   │   ├── test_executor.py
 │   │   ├── test_instructions.py
 │   │   └── test_memory.py
-│   └── main.py                # Ponto de entrada do simulador
+│   ├── main.py                # Ponto de entrada do simulador
+│   └── teste_completo.py      # Arquivo de teste que não utiliza `pytest`
 ├── .gitignore
 ├── requirements.txt
 └── README.md
