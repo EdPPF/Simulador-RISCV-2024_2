@@ -119,28 +119,6 @@ def main(cpui=None):
     try:
         # cpui.run()
         cpu.run()     # UltraT
-        # cpu41.run()
-        # cpu42.run()
-        # cpu43.run()
-        # cpu44.run()
-        # cpu45.run()
-        # cpu46.run()
-        # cpu47.run()
-        # cpu48.run()
-        # cpu49.run()
-        # cpu51.run()
-        # cpu52.run()
-        # cpu53.run()
-        # cpu54.run()
-        # cpu55.run()
-        # cpu56.run()
-        # cpu57.run()
-        # cpu58.run()
-        # cpu59.run()
-        # cpu61.run()
-        # cpu62.run()
-        # cpu63.run()
-        # cpu64.run()
     except ProgramCounterOverflowError as e:
         print(f"Pirijonga -> {e}")
     except SystemExit as e:
@@ -163,5 +141,3 @@ if __name__ == "__main__":
     for process in processes:
         process.join()
     print("\nFim das execuções!")
-
-    # main()

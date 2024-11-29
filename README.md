@@ -89,6 +89,48 @@ pytest src/tests/test_instructions.py -vv
 
 Além dos testes de `pytest`, ou seja, todos os arquivos do tipo `test_*.py`, o arquivo `tests/test_completo.py` pode ser executado para verificar testes diversos das instruções sem utilizar alguma biblioteca específica para isso. Ele possui várias instâncias de `CPU` e as executa em diferentes threads por meio da bilbioteca padrão `multiprocessing`. Os resultados são impressos no terminal.
 
+Esse arquivo pode ser executado de duas formas: Utilizando a instância `cpui` ou utilizando a `cpu`. Seja lá qual for escolhida, basta comentar e descomentar o código como abaixo:
+
+- `cpui` - Roda e paralelo todas as 22 instâncias de `CPU` no arquivo, cada uma contendo um teste isolado.
+
+    ```python
+    ...
+    def main(cpui=None):
+        try:
+            cpui.run()
+        except ProgramCounterOverflowError as e:
+            print(f"Pirijonga -> {e}")
+        except SystemExit as e:
+            print(f"Jiriponga -> {e}")
+
+    if __name__ == "__main__":
+        cpu_instances = [
+            cpu41, cpu42, cpu43, cpu44, cpu45, cpu46, cpu47, cpu48, cpu49,
+            cpu51, cpu52, cpu53, cpu54, cpu55, cpu56, cpu57, cpu58, cpu59,
+            cpu61, cpu62, cpu63, cpu64
+        ]
+    ...
+    ```
+
+- `cpu` - Executa o arquivo com todos os 22 testes de um única vez, num teste maior.
+
+    ```python
+    ...
+    def main(cpui=None):
+        try:
+            cpu.run() # ultraT
+        except ProgramCounterOverflowError as e:
+            print(f"Pirijonga -> {e}")
+        except SystemExit as e:
+            print(f"Jiriponga -> {e}")
+
+    if __name__ == "__main__":
+        cpu_instances = [
+            cpu
+        ]
+    ...
+    ```
+
 # Estrutura do Repositório
 
 ```bash
