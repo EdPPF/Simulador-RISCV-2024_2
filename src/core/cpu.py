@@ -14,22 +14,29 @@ class CPU(Executor):
     def __init__(self, code_path, data_path):
         self.PC = np.uint32(0)
         """Program Counter. Endereço da próxima instrução a ser executada."""
-        xregs = np.zeros(32, dtype=np.uint32)
+        self.xregs = np.zeros(32, dtype=np.uint32)
         """Banco de registradores. Cada registrador é um inteiro de 32 bits sem sinal."""
 
         memory = Memory()
         # Carregar os dados do programa na memória:
         memory.load_mem(code_path, data_path)
-        super().__init__(xregs, memory, self.PC) # Inicializa o Executor com o banco de registradores e a memória
+        super().__init__(self.xregs, memory, self.PC) # Inicializa o Executor com o banco de registradores e a memória
 
     def run(self):
         """
         Executa o programa até encontrar uma chamada de sistema para encerramento, ou até o pc ultrapassar o limite do segmento de código (2k words).
         """
-        while True:
-            self.step()
-            if self.PC >= 2048 * 4: # 2k words
-                raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
+        try:
+            while True:
+                self.step()
+                # if self.PC >= 2048 * 4: # 2k words
+                #     raise ProgramCounterOverflowError("Profram Counter ultrapassou o limite do segmento de código.")
+        except ProgramCounterOverflowError as e:
+            print(e)
+        except SystemExit as e:
+            print(f"System Exit: {e}")
+        except Exception as e:
+            print(f"Erro inesperado: {e}")
 
 
 """

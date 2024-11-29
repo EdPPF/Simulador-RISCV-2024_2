@@ -9,15 +9,17 @@ class MemoryMock:
     """Mock para a memória."""
     def __init__(self) -> None:
         self.MEM = np.zeros(16384, dtype=np.uint8)
+        self.text_base = 0x0000  # Endereço base do segmento .text
+        self.data_base = 0x2000  # Endereço base do segmento .data
 
 
 class TestInstructionSet:
     """Testes para o conjunto de instruções RV32I."""
     memory = MemoryMock()
-    instructions = InstructionSet(np.zeros(32, dtype=np.uint32), np.uint32(0), memory)
+    instructions = InstructionSet(np.zeros(32, dtype=np.uint32), memory)
 
     def test_add(self):
-        rd = 0
+        rd = 10
         rs1 = 1
         rs2 = 2
         self.instructions.xregs[rs1] = np.int32(0x00000001)
@@ -26,7 +28,7 @@ class TestInstructionSet:
         assert self.instructions.xregs[rd] == 0x00000003
 
     def test_addi(self):
-        rd = 0
+        rd = 10
         rs1 = 1
         imm = 0x002
         self.instructions.xregs[rs1] = np.int32(0x00000001)
@@ -34,7 +36,7 @@ class TestInstructionSet:
         assert self.instructions.xregs[rd] == 0x00000003
 
     def test_and(self):
-        rd = 0
+        rd = 10
         rs1 = 1
         rs2 = 2
         self.instructions.xregs[rs1] = np.int32(0b10101010) # 0xAA
@@ -43,7 +45,7 @@ class TestInstructionSet:
         assert self.instructions.xregs[rd] == 0b10001000
 
     def test_andi(self):
-        rd = 0
+        rd = 10
         rs1 = 1
         imm = 0x002
         self.instructions.xregs[rs1] = np.int32(0b10101010) # 0xAA
@@ -51,157 +53,165 @@ class TestInstructionSet:
         assert self.instructions.xregs[rd] == 0b00000010
 
     def test_auipc(self):
-        rd = 0
+        rd = 10
         imm = 0x002
-        self.instructions.auipc(rd, imm)
-        assert self.instructions.xregs[rd] == 0x00000002
+        self.instructions.auipc(rd, imm, 0x00000004)
+        assert self.instructions.xregs[rd] == 0x00002000
 
     def test_beq(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4 # Levando em conta a função fetch()
+        pc = np.uint32(0)
+        pc += 4 # Levando em conta a função fetch()
         self.instructions.xregs[rs1] = np.int32(0x00000001)
         # Se rs1 == rs2, PC = PC + imm
         self.instructions.xregs[rs2] = np.int32(0x00000001)
-        self.instructions.beq(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.beq(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 != rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.int32(0x00000003)
-        self.instructions.beq(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.beq(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         # Imm não alinhado em 4 bytes
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.beq(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.beq(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_bne(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4 # Levando em conta a função fetch()
+        pc = np.uint32(0)
+        pc += 4 # Levando em conta a função fetch()
         self.instructions.xregs[rs1] = np.int32(0x00000001)
         # Se rs1 != rs2, PC = PC + imm
         self.instructions.xregs[rs2] = np.int32(0x00000003)
-        self.instructions.bne(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.bne(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 == rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.int32(0x00000001)
-        self.instructions.bne(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.bne(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.bne(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.bne(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_bge(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4
+        pc = np.uint32(0)
+        pc += 4
         self.instructions.xregs[rs1] = np.int32(0x00000003)
         self.instructions.xregs[rs2] = np.int32(0x00000001)
         # Se rs1 >= rs2, PC = PC + imm
-        self.instructions.bge(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.bge(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 < rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.int32(0x00000004)
-        self.instructions.bge(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.bge(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.bge(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.bge(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_bgeu(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4
+        pc = np.uint32(0)
+        pc += 4
         self.instructions.xregs[rs1] = np.uint32(0x00000003)
         self.instructions.xregs[rs2] = np.uint32(0x00000001)
         # Se rs1 >= rs2, PC = PC + imm
-        self.instructions.bgeu(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.bgeu(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 < rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.uint32(0x00000004)
-        self.instructions.bgeu(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.bgeu(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.bgeu(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.bgeu(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_blt(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4
+        pc = np.uint32(0)
+        pc += 4
         self.instructions.xregs[rs1] = np.int32(0x00000001)
         self.instructions.xregs[rs2] = np.int32(0x00000003)
         # Se rs1 < rs2, PC = PC + imm
-        self.instructions.blt(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.blt(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 >= rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.int32(0x00000001)
-        self.instructions.blt(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.blt(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.blt(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.blt(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_bltu(self):
         rs1  = 1
         rs2  = 2
         imm = 0x008
-        self.instructions.pc += 4
+        pc = np.uint32(0)
+        pc += 4
         self.instructions.xregs[rs1] = np.uint32(0x00000001)
         self.instructions.xregs[rs2] = np.uint32(0x00000003)
         # Se rs1 < rs2, PC = PC + imm
-        self.instructions.bltu(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0) + 4
+        pc = self.instructions.bltu(rs1, rs2, imm, pc)
+        assert pc == 0x00000008
+        pc = np.uint32(0) + 4
         # Se rs1 >= rs2, PC = PC + 4
         self.instructions.xregs[rs2] = np.uint32(0x00000001)
-        self.instructions.bltu(rs1, rs2, imm)
-        assert self.instructions.pc == 0x00000004
+        pc = self.instructions.bltu(rs1, rs2, imm, pc)
+        assert pc == 0x00000004
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.bltu(rs1, rs2, imm)
-        self.instructions.pc = np.uint32(0)
+            pc = self.instructions.bltu(rs1, rs2, imm, pc)
+        pc = np.uint32(0)
 
     def test_jal(self):
         rd = 1
         imm = 0x008
-        self.instructions.pc += 4
-        self.instructions.jal(rd, imm)
+        pc = np.uint32(0)
+        pc += 4
+        pc = self.instructions.jal(rd, imm, pc)
         assert self.instructions.xregs[rd] == 0x00000004 # PC + 4 == 0x00000000 + 4
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0)
+        assert pc == 0x00000008
+        pc = np.uint32(0)
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.jal(rd, imm)
+            pc = self.instructions.jal(rd, imm, pc)
 
     def test_jalr(self):
         rd = 1
         rs1 = 2
         imm = 0x008
-        self.instructions.pc += 4
+        pc = np.uint32(0)
+        pc += 4
         self.instructions.xregs[rs1] = np.uint32(0x00000001)
-        self.instructions.jalr(rd, rs1, imm)
+        pc = self.instructions.jalr(rd, rs1, imm, pc)
         assert self.instructions.xregs[rd] == 0x00000004
-        assert self.instructions.pc == 0x00000008
-        self.instructions.pc = np.uint32(0)
+        assert pc == 0x00000008
+        pc = np.uint32(0)
         imm = 0x003
         with pytest.raises(ValueError):
-            self.instructions.jalr(rd, rs1, imm)
+            pc = self.instructions.jalr(rd, rs1, imm, pc)
 
     def test_or(self):
         rd = 1

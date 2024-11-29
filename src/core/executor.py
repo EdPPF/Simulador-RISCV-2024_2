@@ -9,24 +9,25 @@ Módulo de execução das instruções do RISC-V.\n
 # from collections import defaultdict # Para usar o dict dispatch pattern
 from core.instruction_set import InstructionSet
 from core.decoder import Decoder
-# from cpu import xregs
-
+import numpy as np
 
 class Executor:
     """
     Função execute(): executa a instrução que foi lida pela função `fetch()` e decodificada por `Decoder.decode()`.
     """
     def __init__(self, registers, memory, pc) -> None:
+        self.global_counter = 0
         self.ins_flag = ''
         self.xregs = registers
         self.memory = memory
         self.pc = pc
         self.decoder = Decoder()
-        self.instruction_set = InstructionSet(self.xregs, self.pc, self.memory)
+        self.instruction_set = InstructionSet(self.xregs, self.memory) #self.pc, self.memory)
 
-    def fetch(self) -> str:
+    def fetch(self):
         '''Lê a instrução da memória e incrementa o PC.'''
-        instruction: str = self.memory.lw(self.pc, 0) # 0 porque a área de .text do RARS começa em 0 na memória
+        # self.instruction_set.pc = self.pc           # Atualiza o PC no InstructionSet
+        instruction = self.memory.lw((self.pc + 0)) # 0 porque a área de .text do RARS começa em 0 na memória
         self.pc += 4
         return instruction
 
@@ -35,18 +36,6 @@ class Executor:
         Executa a instrução de acordo com o formato.\n
         `ic` é a instrução decodificada, que contém os campos da instrução e seu formato.
         '''
-
-        # Dict dispatch pattern. Bem legal pra substituir if-elif-else, apesar de eu poder usar match case no Python 3.10:
-        # funcs = defaultdict(lambda *args: lambda *a: ValueError(f"Formato de instrução não reconhecido: {ic['ins_format']}"), {
-        #     'R_FORMAT': self.execute_r,
-        #     'I_FORMAT': self.execute_i,
-        #     'S_FORMAT': self.execute_s,
-        #     'SB_FORMAT': self.execute_sb,
-        #     'U_FORMAT': self.execute_u,
-        #     'UJ_FORMAT': self.execute_uj
-        # })
-        # funcs[ic['ins_format']](ic)
-
         match ic['ins_format']:
             case 'R_FORMAT':
                 self.ins_flag = 'R_FORMAT'
@@ -72,8 +61,15 @@ class Executor:
     def step(self):
         '''Executa um ciclo de instrução'''
         instruction = self.fetch()            # Lê a instrução da memória
-        ic = self.decoder.decode(instruction) # Retorna os campos da instrução e seu formato
+        # print(f"{' '*4}Instruction: {bin(instruction)}")
+        ic = self.decoder.decode(np.uint32(int(instruction)))#, 16))) # Retorna os campos da instrução e seu formato
+        # print(f"{' '*4}Decoded: {ic}")
+        # self.instruction_set.pc = self.pc     # Atualiza o PC no InstructionSet
+        # print(f"Ins Format: {ic['ins_format']}")
         self.execute(ic)                      # Executa a instrução
+        self.global_counter += 1
+        # self.pc = self.instruction_set.pc     # Atualiza o PC no Executor
+        # print(f"*\nPC: {hex(self.pc - 4)}\n")
 
     def execute_r(self, ic):
         """
@@ -89,8 +85,8 @@ class Executor:
         0100000 src2 src1 SUB/SRA      dest OP     SRA não implementada!
         ```
         """
-        rs1 = self.xregs[ic['rs1']]
-        rs2 = self.xregs[ic['rs2']]
+        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
+        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
         rd = ic['rd']
         funct3 = ic['funct3']
         funct7 = ic['funct7']
@@ -98,26 +94,33 @@ class Executor:
             case 0x00: # 0000000
                 match funct3:
                     case 0x00: # 000 ADD
+                        # print("Executando ADD...")
                         self.instruction_set.add(rd, rs1, rs2)
                     case 0x01: # 001 SLL
                         raise NotImplementedError("Instrução SLL não implementada neste projeto!")
                     case 0x02: # 010 SLT
+                        # print("Executando SLT...")
                         self.instruction_set.slt(rd, rs1, rs2)
                     case 0x03: # 011 SLTU
+                        # print("Executando SLTU...")
                         self.instruction_set.sltu(rd, rs1, rs2)
-                    case 0x05: # 100 XOR
+                    case 0x04: # 100 XOR
+                        # print("Executando XOR...")
                         self.instruction_set.xor(rd, rs1, rs2)
-                    case 0x04: # 101 SRL
+                    case 0x05: # 101 SRL
                         raise NotImplementedError("Instrução SRL não implementada neste projeto!")
                     case 0x06: # 110 OR
+                        # print("Executando OR...")
                         self.instruction_set.or_(rd, rs1, rs2)
                     case 0x07: # 111 AND
+                        # print("Executando AND...")
                         self.instruction_set.and_(rd, rs1, rs2)
                     case _:
                         raise ValueError(f"funct3 não reconhecido: {funct3}")
             case 0x20: # 0100000
                 match funct3:
                     case 0x00: # 000 SUB
+                        # print("Executando SUB...")
                         self.instruction_set.sub(rd, rs1, rs2)
                     case 0x05: # 101 SRA
                         raise NotImplementedError("Instrução SRA não implementada neste projeto!")
@@ -151,7 +154,7 @@ class Executor:
         ECALL   0   PRIV   0  SYSTEM
         ```
         """
-        rs1 = self.xregs[ic['rs1']]
+        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
         rd = ic['rd']
         imm = ic['imm12_i']
         funct3 = ic['funct3']
@@ -165,30 +168,68 @@ class Executor:
                 raise ValueError(f"Imediato não reconhecido: {imm}")
             return
 
-        match funct3:
-            case 0x00: # 000 ADDI
-                self.instruction_set.addi(rd, rs1, imm)
-            case 0x02: # 010 SLTI
-                raise NotImplementedError("Instrução SLTI não implementada neste projeto!")
-            case 0x03: # 011 SLTIU
-                raise NotImplementedError("Instrução SLTIU não implementada neste projeto!")
-            case 0x07: # 111 ANDI
-                self.instruction_set.andi(rd, rs1, imm)
-            case 0x06: # 110 ORI
-                self.instruction_set.ori(rd, rs1, imm)
-            case 0x04: # 100 XORI
-                raise NotImplementedError("Instrução XORI não implementada neste projeto!")
-            case 0x01: # 001 SLLI
-                self.instruction_set.slli(rd, rs1, imm)
-            case 0x05: # 101 SRLI/SRAI
-                if funct7 == 0x00:
-                    self.instruction_set.srli(rd, rs1, imm)
-                elif funct7 == 0x20:
-                    self.instruction_set.srai(rd, rs1, imm)
-                else:
-                    raise ValueError(f"funct7 não reconhecido: {funct7}")
-            case _:
-                raise ValueError(f"funct3 não reconhecido: {funct3}")
+        match opcode:
+            case 0x03: # 0010011 -> lb, lw, lbu
+                match funct3:
+                    case 0x00: # 000 LB
+                        # print("Executando LB...")
+                        self.instruction_set.lb(rd, rs1, imm)
+                    case 0x02: # 010 LW
+                        # print("Executando LW...")
+                        self.instruction_set.lw(rd, rs1, imm)
+                    case 0x04: # 100 LBU
+                        # print("Executando LBU...")
+                        self.instruction_set.lbu(rd, rs1, imm)
+                    case _: # LH, LHU
+                        raise NotImplementedError("Instruções não implementadas neste projeto: LH, LHU")
+            case 0x13: # 0010011 -> ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI/SRAI
+                match funct3:
+                    case 0x00: # 000 ADDI
+                        # print("Executando ADDI...")
+                        self.instruction_set.addi(rd, rs1, imm)
+                    case 0x02: # 010 SLTI
+                        raise NotImplementedError("Instrução SLTI não implementada neste projeto!")
+                    case 0x03: # 011 SLTIU
+                        raise NotImplementedError("Instrução SLTIU não implementada neste projeto!")
+                    case 0x07: # 111 ANDI
+                        # print("Executando ANDI...")
+                        self.instruction_set.andi(rd, rs1, imm)
+                    case 0x06: # 110 ORI
+                        # print("Executando ORI...")
+                        self.instruction_set.ori(rd, rs1, imm)
+                    case 0x04: # 100 XORI
+                        raise NotImplementedError("Instrução XORI não implementada neste projeto!")
+                    case 0x01: # 001 SLLI
+                        # print("Executando SLLI...")
+                        self.instruction_set.slli(rd, rs1, imm)
+                    case 0x05: # 101 SRLI/SRAI
+                        if funct7 == 0x00:
+                            # print("Executando SRLI...")
+                            self.instruction_set.srli(rd, rs1, imm)
+                        elif funct7 == 0x20:
+                            # print("Executando SRAI...")
+                            self.instruction_set.srai(rd, rs1, imm)
+                        else:
+                            raise ValueError(f"funct7 não reconhecido: {funct7}")
+                    case _:
+                        raise ValueError(f"funct3 não reconhecido: {funct3}")
+            case 0x23: # 0100011 -> sb, sw
+                match funct3:
+                    case 0x00: # 000 SB
+                        # print("Executando SB...")
+                        self.instruction_set.sb(rs1, imm, rd)
+                    case 0x10: # 010 SW
+                        # print("Executando SW...")
+                        self.instruction_set.sw(rs1, imm, rd)
+                    case _: # SH
+                        raise NotImplementedError("Instrução SH não implementada neste projeto!")
+            case 0x67: # 110111 JALR
+                match funct3:
+                    case 0x00: # 1100111 JALR
+                        # print("Executando JALR...")
+                        self.pc = self.instruction_set.jalr(rd, rs1, imm, self.pc)
+                    case _:
+                        raise ValueError(f"funct3 não reconhecido: {funct3}")
 
     def execute_s(self, ic):
         """
@@ -201,17 +242,19 @@ class Executor:
         offset[11:5] src base width  offset[4:0] STORE
         ```
         """
-        rs1 = self.xregs[ic['rs1']]
-        rs2 = self.xregs[ic['rs2']]
+        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
+        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
         imm = ic['imm12_s']
         funct3 = ic['funct3']
         match funct3:
             case 0x00: # 000 SB
-                self.memory.sb(rs1, imm, rs2)
+                # print("Executando SB...")
+                self.instruction_set.sb(rs1, imm, rs2)
             case 0x01: # 001 SH
                 raise NotImplementedError("Instrução SH não implementada neste projeto!")
             case 0x02: # 010 SW
-                self.memory.sw(rs1, imm, rs2)
+                # print(f"Executando SW...")
+                self.instruction_set.sw(rs1, imm, rs2)
             case _:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
@@ -223,23 +266,31 @@ class Executor:
         1       6         5    5   3      4        1       7
         ```
         """
-        rs1 = self.xregs[ic['rs1']]
-        rs2 = self.xregs[ic['rs2']]
+        rs1 = ic['rs1'] # self.xregs[ic['rs1']]
+        rs2 = ic['rs2'] # self.xregs[ic['rs2']]
         imm = ic['imm13']
         funct3 = ic['funct3']
         match funct3:
             case 0x00: # 000 BEQ
-                self.instruction_set.beq(rs1, rs2, imm)
+                # print("Executando BEQ...")
+                self.pc = self.instruction_set.beq(rs1, rs2, imm, self.pc)
             case 0x01: # 001 BNE
-                self.instruction_set.bne(rs1, rs2, imm)
+                # print(f"Executando BNE...")
+                self.pc = self.instruction_set.bne(rs1, rs2, imm, self.pc)
             case 0x04: # 100 BLT
-                self.instruction_set.blt(rs1, rs2, imm)
+                # print(f"Executando BLT...")
+                self.pc = self.instruction_set.blt(rs1, rs2, imm, self.pc)
+                print(f"Saindo da exxecução de BLT. PC = {self.pc}")
+                exit(-1)
             case 0x05: # 101 BGE
-                self.instruction_set.bge(rs1, rs2, imm)
+                # print(f"Executando BGE...")
+                self.pc = self.instruction_set.bge(rs1, rs2, imm, self.pc)
             case 0x06: # 110 BLTU
-                self.instruction_set.bltu(rs1, rs2, imm)
+                # print(f"Executando BLTU...")
+                self.pc = self.instruction_set.bltu(rs1, rs2, imm, self.pc)
             case 0x07: # 111 BGEU
-                self.instruction_set.bgeu(rs1, rs2, imm)
+                # print(f"Executando BGEU...")
+                self.pc = self.instruction_set.bgeu(rs1, rs2, imm, self.pc)
             case _:
                 raise ValueError(f"funct3 não reconhecido: {funct3}")
 
@@ -256,8 +307,10 @@ class Executor:
         opcode = ic['opcode']
         match opcode:
             case 0x17: # 0010111 AUIPC
-                self.instruction_set.auipc(rd, imm)
+                # print("Executando AUIPC...")
+                self.instruction_set.auipc(rd, imm, self.pc)
             case 0x37: # 0110111 LUI
+                # print("Executando LUI...")
                 self.instruction_set.lui(rd, imm)
 
     def execute_j(self, ic):
@@ -274,8 +327,11 @@ class Executor:
         rs1 = ic['rs1']
         match opcode:
             case 0x6F: # 1101111 JAL
-                self.instruction_set.jal(rd, imm)
-            case 0x67: # 1100111 JALR
-                self.instruction_set.jalr(rd, rs1, imm)
+                # print("Executando JAL...")
+                # print(f"IMM > {hex(imm)}: {type(imm)}")
+                self.pc = self.instruction_set.jal(rd, imm, self.pc)
+            # case 0x67: # 1100111 JALR
+            # #     print("Executando JALR...")
+            #     self.pc = self.instruction_set.jalr(rd, rs1, imm, self.pc)
             case _:
                 raise ValueError(f"opcode não reconhecido: {opcode}")

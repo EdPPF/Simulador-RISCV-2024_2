@@ -52,7 +52,7 @@ class Decoder:
                 'rd': rd,
                 'ins_format': ins_format,
             }
-        elif opcode in [0x13, 0x67, 0x03]:  # I-type
+        elif opcode in [0x13, 0x67, 0x03, 0x73]:  # I-type
             ins_format = 'I_FORMAT'
             imm12_i = np.int32(instruction) >> 20
             return {
@@ -107,7 +107,7 @@ class Decoder:
                 'ins_format': ins_format,
             }
         else:
-            raise ValueError(f"Opcode não reconhecido: {opcode}")
+            raise ValueError(f"Opcode não reconhecido: {bin(opcode)}")
 
         # Determina o formato da instrução:
         # if opcode in [0x33, 0x3B]:  # R-type

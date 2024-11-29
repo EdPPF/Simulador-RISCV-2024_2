@@ -86,6 +86,7 @@ class TestDecoder:
         assert decoded == {
             'opcode': 0b1101111,
             'imm21': 0b00000000000000011000,
+            'rs1': 0b0,
             'rd': 0b01011,
             'ins_format': 'J_FORMAT',
         }
